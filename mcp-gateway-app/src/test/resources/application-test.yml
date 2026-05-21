@@ -1,0 +1,15 @@
+server:
+  port: 8090
+  servlet:
+    context-path: /api-gateway
+
+spring:
+  application:
+    name: mcp-gateway
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      chat:
+        options:
+          model: gpt-4.1-mini

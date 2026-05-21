@@ -70,7 +70,7 @@ public class SessionManagementService implements ISessionManagementService {
         Sinks.Many<ServerSentEvent<String>> sink = Sinks.many().multicast().onBackpressureBuffer();
 
         // 推送 endpoint 事件——这是 SSE 协议的第一条消息，告知客户端消息请求地址
-        String messageEndpoint = "/" + gatewayId + "/mcp/message?sessionId=" + sessionId;
+        String messageEndpoint = "/api-gateway/" + gatewayId + "/mcp/sse?sessionId=" + sessionId;
         sink.tryEmitNext(ServerSentEvent.<String>builder()
                 .event("endpoint")
                 .data(messageEndpoint)
