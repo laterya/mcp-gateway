@@ -34,11 +34,10 @@ public class SseResponseNode extends AbstractSessionChainNode {
     protected Flux<ServerSentEvent<String>> doHandle(String gatewayId, SessionChainContext context) {
         SessionConfigVO sessionConfigVO = context.getSessionConfigVO();
 
-        // 心跳 Flux：每 60 秒发一个 ping 事件
+        // 心跳：用 SSE 标准注释行（冒号开头），MCP 客户端会自动忽略
         Flux<ServerSentEvent<String>> heartbeat = Flux.interval(Duration.ofSeconds(60))
                 .map(i -> ServerSentEvent.<String>builder()
-                        .event("ping")
-                        .data("ping")
+                        .comment("ping")
                         .build());
 
         // 合并会话 Sink 流 + 心跳，注册断连清理

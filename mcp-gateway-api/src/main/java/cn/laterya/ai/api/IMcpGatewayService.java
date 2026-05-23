@@ -31,6 +31,6 @@ public interface IMcpGatewayService {
      * @param messageBody JSON-RPC 请求体
      * @return 响应结果
      */
-    Mono<ResponseEntity<Object>> handleMessage(String gatewayId, String sessionId, String messageBody);
+    Mono<ResponseEntity<Void>> handleMessage(String gatewayId, String sessionId, String messageBody);
 
 }

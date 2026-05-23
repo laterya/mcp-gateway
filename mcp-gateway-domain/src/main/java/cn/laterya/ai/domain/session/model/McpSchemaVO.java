@@ -27,10 +27,10 @@ public final class McpSchemaVO {
     /**
      * JSON-RPC 2.0 消息类型 sealed 接口
      *
-     * <p>sealed + permits 限制只有 Request 和 Response 两种实现，
+     * <p>sealed + permits 限制只有 Request / Notification / Response 三种实现，
      * 在 switch 表达式和 instanceof 模式匹配时编译器能做穷举检查。
      */
-    public sealed interface JSONRPCMessage permits JSONRPCRequest, JSONRPCResponse {
+    public sealed interface JSONRPCMessage permits JSONRPCRequest, JSONRPCNotification, JSONRPCResponse {
 
         String jsonrpc();
 
@@ -83,17 +83,44 @@ public final class McpSchemaVO {
     }
 
     /**
+     * JSON-RPC 2.0 通知对象
+     *
+     * <p>有 method 但无 id，表示客户端通知，服务端不需要回复。
+     * 例如初始化完成后的 notifications/initialized。
+     *
+     * @param jsonrpc 协议版本，固定 "2.0"
+     * @param method  通知方法名
+     * @param params  通知参数（可选）
+     */
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record JSONRPCNotification(
+            @JsonProperty("jsonrpc") String jsonrpc,
+            @JsonProperty("method") String method,
+            @JsonProperty("params") Object params
+    ) implements JSONRPCMessage {
+    }
+
+    /**
      * 反序列化 JSON-RPC 消息
      *
-     * <p>根据 JSON 内容自动判断是请求（含 method+id）还是响应（含 result 或 error）。
+     * <p>根据 JSON 内容自动判断消息类型：
+     * <ul>
+     *   <li>有 method + id → Request（需要响应）</li>
+     *   <li>有 method 无 id → Notification（不需要响应）</li>
+     *   <li>有 result 或 error → Response</li>
+     * </ul>
      */
     public static JSONRPCMessage deserializeJsonRpcMessage(String jsonText) {
         try {
             HashMap<String, Object> messageMap = OBJECT_MAPPER.readValue(jsonText, new TypeReference<>() {
             });
 
-            if (messageMap.containsKey("method") && messageMap.containsKey("id")) {
-                return OBJECT_MAPPER.convertValue(messageMap, JSONRPCRequest.class);
+            if (messageMap.containsKey("method")) {
+                if (messageMap.containsKey("id")) {
+                    return OBJECT_MAPPER.convertValue(messageMap, JSONRPCRequest.class);
+                }
+                return OBJECT_MAPPER.convertValue(messageMap, JSONRPCNotification.class);
             }
 
             return OBJECT_MAPPER.convertValue(messageMap, JSONRPCResponse.class);

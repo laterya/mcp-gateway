@@ -3,6 +3,8 @@ package cn.laterya.ai.trigger.http;
 import cn.laterya.ai.api.IMcpGatewayService;
 import cn.laterya.ai.cases.mcp.IMcpSessionService;
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
+import cn.laterya.ai.domain.session.model.SessionConfigVO;
+import cn.laterya.ai.domain.session.service.ISessionManagementService;
 import cn.laterya.ai.domain.session.service.ISessionMessageService;
 import cn.laterya.ai.types.enums.ResponseCode;
 import cn.laterya.ai.types.exception.AppException;
@@ -17,18 +19,21 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Map;
-
 /**
  * MCP 网关控制器 —— trigger 层
  *
  * <p>职责（只做接口封装，不含业务逻辑）：
  * 1. 日志打印
  * 2. 参数校验
- * 3. 调用 case 层
- * 4. 异常处理 & 结果封装
+ * 3. 调用 case/domain 层
+ * 4. 通过 SSE Sink 推送响应
  *
- * <p>示例地址：http://localhost:8090/api-gateway/test10001/mcp/sse
+ * <p>SSE 双通道设计：
+ * <ul>
+ *   <li>GET /{gatewayId}/mcp/sse → 建立 SSE 流（服务端推送通道）</li>
+ *   <li>POST /{gatewayId}/mcp/sse?sessionId=xxx → 客户端发送消息（请求通道）</li>
+ * </ul>
+ * 客户端 POST 的响应不是通过 HTTP 返回，而是通过同一个 SSE Sink 推送回去。
  */
 @Slf4j
 @RestController
@@ -37,12 +42,17 @@ import java.util.Map;
 @RequestMapping("/")
 public class McpGatewayController implements IMcpGatewayService {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     @Resource
     private IMcpSessionService mcpSessionService;
 
     // todo 暂时调用 domain 测试，后续调用 case 编排
     @Resource
     private ISessionMessageService sessionMessageService;
+
+    @Resource
+    private ISessionManagementService sessionManagementService;
 
     @Override
     @GetMapping(value = "{gatewayId}/mcp/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -64,27 +74,38 @@ public class McpGatewayController implements IMcpGatewayService {
 
     @Override
     @PostMapping(value = "{gatewayId}/mcp/sse", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity<Object>> handleMessage(@PathVariable("gatewayId") String gatewayId,
-                                                      @RequestParam String sessionId,
-                                                      @RequestBody String messageBody) {
+    public Mono<ResponseEntity<Void>> handleMessage(@PathVariable("gatewayId") String gatewayId,
+                                                     @RequestParam String sessionId,
+                                                     @RequestBody String messageBody) {
         try {
             log.info("处理 MCP SSE 消息 gatewayId:{} sessionId:{} messageBody:{}", gatewayId, sessionId, messageBody);
 
+            // 查找会话，不存在则拒绝
+            SessionConfigVO session = sessionManagementService.getSession(sessionId);
+            if (null == session) {
+                log.warn("会话不存在或已过期 gatewayId:{} sessionId:{}", gatewayId, sessionId);
+                return Mono.just(ResponseEntity.notFound().build());
+            }
+
+            // 反序列化 + 分发处理
             McpSchemaVO.JSONRPCMessage jsonrpcMessage = McpSchemaVO.deserializeJsonRpcMessage(messageBody);
             log.info("反序列化消息 jsonrpc:{}", jsonrpcMessage.jsonrpc());
 
-            // 通知类消息（notifications/*）没有 id，不需要响应
-            if (jsonrpcMessage instanceof McpSchemaVO.JSONRPCRequest request) {
-                McpSchemaVO.JSONRPCResponse jsonrpcResponse = sessionMessageService.processHandlerMessage(request);
-                log.info("调用结果:{}", new ObjectMapper().writeValueAsString(jsonrpcResponse));
-            } else {
-                log.info("收到通知消息，无需响应");
+            McpSchemaVO.JSONRPCResponse jsonrpcResponse = sessionMessageService.processHandlerMessage(jsonrpcMessage);
+
+            // 处理结果通过 SSE Sink 推回客户端
+            if (null != jsonrpcResponse) {
+                String responseJson = OBJECT_MAPPER.writeValueAsString(jsonrpcResponse);
+                session.getSink().tryEmitNext(ServerSentEvent.<String>builder()
+                        .event("message")
+                        .data(responseJson)
+                        .build());
             }
 
-            return Mono.just(ResponseEntity.ok(Map.of("status", "sent via SSE")));
+            return Mono.just(ResponseEntity.accepted().build());
         } catch (Exception e) {
             log.error("处理 MCP SSE 消息失败 gatewayId:{} sessionId:{} messageBody:{}", gatewayId, sessionId, messageBody, e);
-            return Mono.empty();
+            return Mono.just(ResponseEntity.internalServerError().build());
         }
     }
 
