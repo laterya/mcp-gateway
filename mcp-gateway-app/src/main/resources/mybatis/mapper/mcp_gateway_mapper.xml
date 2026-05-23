@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.laterya.ai.infrastructure.dao.IMcpGatewayDao">
+
+    <resultMap id="mcpGatewayMap" type="cn.laterya.ai.infrastructure.dao.po.McpGatewayPO">
+        <id column="id" property="id"/>
+        <result column="gateway_id" property="gatewayId"/>
+        <result column="gateway_name" property="gatewayName"/>
+        <result column="gateway_desc" property="gatewayDesc"/>
+        <result column="version" property="version"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="cn.laterya.ai.infrastructure.dao.po.McpGatewayPO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO mcp_gateway (gateway_id, gateway_name, gateway_desc, version, status)
+        VALUES (#{gatewayId}, #{gatewayName}, #{gatewayDesc}, #{version}, #{status})
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM mcp_gateway WHERE id = #{id}
+    </delete>
+
+    <update id="updateById" parameterType="cn.laterya.ai.infrastructure.dao.po.McpGatewayPO">
+        UPDATE mcp_gateway
+        SET gateway_name = #{gatewayName}, gateway_desc = #{gatewayDesc}, version = #{version}, status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <select id="queryById" resultMap="mcpGatewayMap">
+        SELECT * FROM mcp_gateway WHERE id = #{id}
+    </select>
+
+    <select id="queryByGatewayId" resultMap="mcpGatewayMap">
+        SELECT * FROM mcp_gateway WHERE gateway_id = #{gatewayId}
+    </select>
+
+    <select id="queryAll" resultMap="mcpGatewayMap">
+        SELECT * FROM mcp_gateway
+    </select>
+
+</mapper>

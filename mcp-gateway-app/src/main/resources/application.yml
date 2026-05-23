@@ -6,3 +6,22 @@ server:
 spring:
   application:
     name: mcp-gateway
+  datasource:
+    username: root
+    password: 123456
+    url: jdbc:mysql://127.0.0.1:13306/mcp_gateway?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: McpGateway_HikariCP
+      minimum-idle: 5
+      idle-timeout: 180000
+      maximum-pool-size: 15
+      auto-commit: true
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+    type: com.zaxxer.hikari.HikariDataSource
+
+mybatis:
+  mapper-locations: classpath:/mybatis/mapper/*.xml
+  config-location: classpath:/mybatis/config/mybatis-config.xml
