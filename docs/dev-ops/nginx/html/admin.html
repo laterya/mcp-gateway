@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MCP Gateway · 管理控制台</title>
@@ -73,6 +73,14 @@ textarea{min-height:100px}select{cursor:pointer;appearance:none;background-image
 .modal h2{font-size:16px;font-weight:600;margin-bottom:20px;font-family:var(--m)}
 .modal .fg{margin-bottom:0}
 @media(max-width:768px){.sb{width:60px;min-width:60px}.sb-logo .br,.sb-logo .sub,.ni span:not(.ico){display:none}.ni{justify-content:center;padding:10px}.sr{grid-template-columns:repeat(2,1fr)}.fg{grid-template-columns:1fr}.modal{width:90%}}
+
+[data-theme="light"]{--bg:#f5f5f7;--srf:#ffffff;--elv:#f0f0f3;--hvr:#e8e8ed;--brd:rgba(0,0,0,0.06);--brd2:rgba(0,0,0,0.1);--txt:#1d1d1f;--tx2:#6e6e73;--tx3:#aeaeb2;--ac:#0d9488;--acd:rgba(13,148,136,0.12);--acg:rgba(13,148,136,0.25);--su:#059669;--wa:#d97706;--er:#dc2626;--in:#2563eb}
+[data-theme="light"] body::before{background-image:radial-gradient(circle,rgba(0,0,0,0.03) 1px,transparent 1px)}
+[data-theme="light"] th{background:rgba(0,0,0,0.03)}
+[data-theme="light"] .bt-pr{color:#fff}
+[data-theme="light"] .bt-pr:hover{color:#fff}
+[data-theme="light"] input, [data-theme="light"] textarea, [data-theme="light"] select{background:var(--elv)}
+[data-theme="light"] .modal-overlay{background:rgba(0,0,0,0.3)}
 </style>
 </head>
 <body>
@@ -90,7 +98,7 @@ textarea{min-height:100px}select{cursor:pointer;appearance:none;background-image
   <div class="ni" data-sec="protocol-create"><span class="ico">+⎔</span><span>新增协议</span></div>
 </div>
 <div class="mn">
-  <div class="tb"><div class="st"><span class="dot"></span>localhost:8090/api-gateway/admin</div></div>
+  <div class="tb"><div class="st"><span class="dot"></span>localhost:8090/api-gateway/admin</div><button class="bt bt-sm" id="theme-toggle" onclick="toggleTheme()" style="font-size:16px;padding:4px 8px" title="切换日间/夜间模式">☀️</button></div>
   <div class="ct" id="ct">
     <!-- ====== 网关列表 ====== -->
     <div class="sec act" id="sec-gateway-list">
@@ -299,6 +307,9 @@ function saveProtocol(){let mp=null;const r=document.getElementById('pc-mp').val
 // Login check
 if(localStorage.getItem('mcp_admin_logged_in')!=='true')window.location.href='index.html';
 loadGatewayList();updateGwOptions();
+function toggleTheme(){const h=document.documentElement,c=h.dataset.theme==='dark'?'light':'dark';h.dataset.theme=c;document.getElementById('theme-toggle').textContent=c==='dark'?'☀️':'🌙';localStorage.setItem('mcp_theme',c)}
+(function(){const t=localStorage.getItem('mcp_theme')||'dark';document.documentElement.dataset.theme=t;setTimeout(()=>{const b=document.getElementById('theme-toggle');if(b)b.textContent=t==='dark'?'☀️':'🌙'},100)})()
+
 </script>
 </body>
 </html>

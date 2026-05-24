@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,6 +20,9 @@ body::before { content:''; position:fixed; inset:0; pointer-events:none; backgro
 .btn { width:100%; padding:12px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; border:none; background:#5eead4; color:#000; font-family:'DM Sans',sans-serif; margin-top:10px; transition:all 180ms; }
 .btn:hover { background:#6fe8da; box-shadow:0 0 16px rgba(94,234,212,0.25); }
 .error { font-size:12px; color:#f87171; margin-top:8px; display:none; }
+
+[data-theme="light"]{--bg:#f5f5f7;--srf:#ffffff;--elv:#f0f0f3;--txt:#1d1d1f;--tx2:#6e6e73;--tx3:#aeaeb2;--ac:#0d9488;--acd:rgba(13,148,136,0.12);--su:#059669;--er:#dc2626}
+[data-theme="light"] body::before{background-image:radial-gradient(circle,rgba(0,0,0,0.03) 1px,transparent 1px)}
 </style>
 </head>
 <body>
