@@ -87,4 +87,15 @@ public class GatewayConfigRequestDTO {
         private LocalDateTime expireTime;
     }
 
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class GatewayProtocolImport {
+        /** OpenAPI JSON 原文 */
+        private String openApiJson;
+        /** 需解析的接口端点列表 */
+        private List<String> endpoints;
+    }
+
 }

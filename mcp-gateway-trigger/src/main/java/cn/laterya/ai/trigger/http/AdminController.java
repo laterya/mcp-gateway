@@ -1,37 +1,32 @@
 package cn.laterya.ai.trigger.http;
 
 import cn.laterya.ai.api.IAdminService;
-import cn.laterya.ai.api.dto.GatewayConfigDTO;
-import cn.laterya.ai.api.dto.GatewayConfigRequestDTO;
-import cn.laterya.ai.api.dto.GatewayConfigResponseDTO;
+import cn.laterya.ai.api.dto.*;
 import cn.laterya.ai.api.response.Response;
-import cn.laterya.ai.cases.admin.IAdminAuthService;
-import cn.laterya.ai.cases.admin.IAdminGatewayService;
-import cn.laterya.ai.cases.admin.IAdminManageService;
-import cn.laterya.ai.cases.admin.IAdminProtocolService;
-import cn.laterya.ai.domain.admin.model.entity.GatewayConfigEntity;
+import cn.laterya.ai.api.response.ResponsePage;
+import cn.laterya.ai.cases.admin.*;
+import cn.laterya.ai.domain.admin.model.entity.*;
 import cn.laterya.ai.domain.auth.model.entity.RegisterCommandEntity;
 import cn.laterya.ai.domain.gateway.model.entity.GatewayConfigCommandEntity;
 import cn.laterya.ai.domain.gateway.model.entity.GatewayToolConfigCommandEntity;
 import cn.laterya.ai.domain.gateway.model.valobj.GatewayConfigVO;
 import cn.laterya.ai.domain.gateway.model.valobj.GatewayToolConfigVO;
+import cn.laterya.ai.domain.protocol.model.entity.AnalysisCommandEntity;
 import cn.laterya.ai.domain.protocol.model.entity.StorageCommandEntity;
+import cn.laterya.ai.domain.protocol.model.valobj.enums.AnalysisTypeEnum;
 import cn.laterya.ai.domain.protocol.model.valobj.http.HTTPProtocolVO;
+import cn.laterya.ai.domain.protocol.service.IProtocolAnalysis;
+import cn.laterya.ai.domain.protocol.service.IProtocolStorage;
 import cn.laterya.ai.types.enums.GatewayEnum;
 import cn.laterya.ai.types.enums.ResponseCode;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * 运营配置管理 Controller —— trigger 层
- *
- * <p>职责：接收 HTTP 请求 → DTO 转 command → 调 case 层 → Entity 转 DTO 响应。
- * 不含业务逻辑，只做适配转换 + 统一异常处理。
- */
 @Slf4j
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*",
@@ -39,177 +34,266 @@ import java.util.stream.Collectors;
 @RequestMapping("/admin/")
 public class AdminController implements IAdminService {
 
-    @Resource
-    private IAdminGatewayService adminGatewayService;
-    @Resource
-    private IAdminAuthService adminAuthService;
-    @Resource
-    private IAdminProtocolService adminProtocolService;
-    @Resource
-    private IAdminManageService adminManageService;
+    @Resource private IAdminGatewayService adminGatewayService;
+    @Resource private IAdminAuthService adminAuthService;
+    @Resource private IAdminProtocolService adminProtocolService;
+    @Resource private IAdminManageService adminManageService;
+    @Resource private IProtocolAnalysis protocolAnalysis;
+    @Resource private IProtocolStorage protocolStorage;
+
+    // ==================== 保存 ====================
 
     @PostMapping("save_gateway_config")
-    @Override
-    public Response<GatewayConfigResponseDTO> saveGatewayConfig(@RequestBody GatewayConfigRequestDTO.GatewayConfig requestDTO) {
+    public Response<GatewayConfigResponseDTO> saveGatewayConfig(@RequestBody GatewayConfigRequestDTO.GatewayConfig req) {
         try {
-            log.info("保存网关配置开始 gatewayId:{}", requestDTO.getGatewayId());
-            GatewayConfigCommandEntity cmd = GatewayConfigCommandEntity.builder()
+            log.info("保存网关配置 gatewayId:{}", req.getGatewayId());
+            adminGatewayService.saveGatewayConfig(GatewayConfigCommandEntity.builder()
                     .gatewayConfigVO(GatewayConfigVO.builder()
-                            .gatewayId(requestDTO.getGatewayId())
-                            .gatewayName(requestDTO.getGatewayName())
-                            .gatewayDesc(requestDTO.getGatewayDesc())
-                            .version(requestDTO.getVersion())
-                            .auth(GatewayEnum.GatewayAuthStatusEnum.getByCode(requestDTO.getAuth()))
-                            .status(GatewayEnum.GatewayStatus.get(requestDTO.getStatus()))
-                            .build())
-                    .build();
-            adminGatewayService.saveGatewayConfig(cmd);
-            log.info("保存网关配置完成 gatewayId:{}", requestDTO.getGatewayId());
-            return Response.<GatewayConfigResponseDTO>builder()
-                    .code(ResponseCode.SUCCESS.getCode())
-                    .info(ResponseCode.SUCCESS.getInfo())
-                    .data(GatewayConfigResponseDTO.builder().success(true).build())
-                    .build();
-        } catch (Exception e) {
-            log.error("保存网关配置失败 gatewayId:{}", requestDTO.getGatewayId(), e);
-            return Response.<GatewayConfigResponseDTO>builder()
-                    .code(ResponseCode.UN_ERROR.getCode())
-                    .info(ResponseCode.UN_ERROR.getInfo())
-                    .build();
-        }
+                            .gatewayId(req.getGatewayId()).gatewayName(req.getGatewayName())
+                            .gatewayDesc(req.getGatewayDesc()).version(req.getVersion())
+                            .auth(GatewayEnum.GatewayAuthStatusEnum.getByCode(req.getAuth()))
+                            .status(GatewayEnum.GatewayStatus.get(req.getStatus())).build()).build());
+            return ok();
+        } catch (Exception e) { return fail(e, "保存网关配置"); }
     }
 
     @PostMapping("save_gateway_tool_config")
-    @Override
-    public Response<GatewayConfigResponseDTO> saveGatewayToolConfig(@RequestBody GatewayConfigRequestDTO.GatewayToolConfig requestDTO) {
+    public Response<GatewayConfigResponseDTO> saveGatewayToolConfig(@RequestBody GatewayConfigRequestDTO.GatewayToolConfig req) {
         try {
-            log.info("保存网关工具配置开始 gatewayId:{}", requestDTO.getGatewayId());
-            GatewayToolConfigCommandEntity cmd = GatewayToolConfigCommandEntity.builder()
+            log.info("保存工具配置 gatewayId:{}", req.getGatewayId());
+            adminGatewayService.saveGatewayToolConfig(GatewayToolConfigCommandEntity.builder()
                     .gatewayToolConfigVO(GatewayToolConfigVO.builder()
-                            .gatewayId(requestDTO.getGatewayId())
-                            .toolId(requestDTO.getToolId())
-                            .toolName(requestDTO.getToolName())
-                            .toolType(requestDTO.getToolType())
-                            .toolDescription(requestDTO.getToolDescription())
-                            .toolVersion(requestDTO.getToolVersion())
-                            .protocolId(requestDTO.getProtocolId())
-                            .protocolType(requestDTO.getProtocolType())
-                            .build())
-                    .build();
-            adminGatewayService.saveGatewayToolConfig(cmd);
-            log.info("保存网关工具配置完成 gatewayId:{}", requestDTO.getGatewayId());
-            return Response.<GatewayConfigResponseDTO>builder()
-                    .code(ResponseCode.SUCCESS.getCode())
-                    .info(ResponseCode.SUCCESS.getInfo())
-                    .data(GatewayConfigResponseDTO.builder().success(true).build())
-                    .build();
-        } catch (Exception e) {
-            log.error("保存网关工具配置失败 gatewayId:{}", requestDTO.getGatewayId(), e);
-            return Response.<GatewayConfigResponseDTO>builder()
-                    .code(ResponseCode.UN_ERROR.getCode())
-                    .info(ResponseCode.UN_ERROR.getInfo())
-                    .build();
-        }
+                            .gatewayId(req.getGatewayId()).toolId(req.getToolId()).toolName(req.getToolName())
+                            .toolType(req.getToolType()).toolDescription(req.getToolDescription())
+                            .toolVersion(req.getToolVersion()).protocolId(req.getProtocolId())
+                            .protocolType(req.getProtocolType()).build()).build());
+            return ok();
+        } catch (Exception e) { return fail(e, "保存工具配置"); }
     }
 
     @PostMapping("save_gateway_protocol")
-    @Override
-    public Response<GatewayConfigResponseDTO> saveGatewayProtocol(@RequestBody GatewayConfigRequestDTO.GatewayProtocol requestDTO) {
+    public Response<GatewayConfigResponseDTO> saveGatewayProtocol(@RequestBody GatewayConfigRequestDTO.GatewayProtocol req) {
         try {
-            log.info("保存网关协议配置开始");
-            StorageCommandEntity cmd = new StorageCommandEntity();
-            if (requestDTO.getHttpProtocols() != null) {
-                cmd.setHttpProtocolVOS(requestDTO.getHttpProtocols().stream().map(p -> {
-                    HTTPProtocolVO vo = new HTTPProtocolVO();
-                    vo.setProtocolId(p.getProtocolId());
-                    vo.setHttpUrl(p.getHttpUrl());
-                    vo.setHttpHeaders(p.getHttpHeaders());
-                    vo.setHttpMethod(p.getHttpMethod());
-                    vo.setTimeout(p.getTimeout());
-                    if (p.getMappings() != null) {
-                        vo.setMappings(p.getMappings().stream().map(m -> HTTPProtocolVO.ProtocolMapping.builder()
-                                .mappingType(m.getMappingType())
-                                .parentPath(m.getParentPath())
-                                .fieldName(m.getFieldName())
-                                .mcpPath(m.getMcpPath())
-                                .mcpType(m.getMcpType())
-                                .mcpDesc(m.getMcpDesc())
-                                .isRequired(m.getIsRequired())
-                                .sortOrder(m.getSortOrder())
-                                .build()).collect(Collectors.toList()));
-                    }
-                    return vo;
-                }).collect(Collectors.toList()));
-            }
-            adminProtocolService.saveGatewayProtocol(cmd);
-            log.info("保存网关协议配置完成");
-            return Response.<GatewayConfigResponseDTO>builder()
-                    .code(ResponseCode.SUCCESS.getCode())
-                    .info(ResponseCode.SUCCESS.getInfo())
-                    .data(GatewayConfigResponseDTO.builder().success(true).build())
-                    .build();
-        } catch (Exception e) {
-            log.error("保存网关协议配置失败", e);
-            return Response.<GatewayConfigResponseDTO>builder()
-                    .code(ResponseCode.UN_ERROR.getCode())
-                    .info(ResponseCode.UN_ERROR.getInfo())
-                    .build();
-        }
+            log.info("保存协议配置");
+            adminProtocolService.saveGatewayProtocol(toStorageCommand(req.getHttpProtocols()));
+            return ok();
+        } catch (Exception e) { return fail(e, "保存协议配置"); }
     }
 
     @PostMapping("save_gateway_auth")
-    @Override
-    public Response<GatewayConfigResponseDTO> saveGatewayAuth(@RequestBody GatewayConfigRequestDTO.GatewayAuth requestDTO) {
+    public Response<GatewayConfigResponseDTO> saveGatewayAuth(@RequestBody GatewayConfigRequestDTO.GatewayAuth req) {
         try {
-            log.info("保存网关auth认证开始 gatewayId:{}", requestDTO.getGatewayId());
-            RegisterCommandEntity cmd = RegisterCommandEntity.builder()
-                    .gatewayId(requestDTO.getGatewayId())
-                    .rateLimit(requestDTO.getRateLimit())
-                    .expireTime(requestDTO.getExpireTime())
-                    .build();
-            adminAuthService.saveGatewayAuth(cmd);
-            log.info("保存网关auth认证完成 gatewayId:{}", requestDTO.getGatewayId());
-            return Response.<GatewayConfigResponseDTO>builder()
-                    .code(ResponseCode.SUCCESS.getCode())
-                    .info(ResponseCode.SUCCESS.getInfo())
-                    .data(GatewayConfigResponseDTO.builder().success(true).build())
-                    .build();
-        } catch (Exception e) {
-            log.error("保存网关auth认证失败 gatewayId:{}", requestDTO.getGatewayId(), e);
-            return Response.<GatewayConfigResponseDTO>builder()
-                    .code(ResponseCode.UN_ERROR.getCode())
-                    .info(ResponseCode.UN_ERROR.getInfo())
-                    .build();
-        }
+            log.info("保存鉴权 gatewayId:{}", req.getGatewayId());
+            adminAuthService.saveGatewayAuth(RegisterCommandEntity.builder()
+                    .gatewayId(req.getGatewayId()).rateLimit(req.getRateLimit()).expireTime(req.getExpireTime()).build());
+            return ok();
+        } catch (Exception e) { return fail(e, "保存鉴权"); }
     }
 
+    // ==================== 导入/解析协议 ====================
+
+    @PostMapping("import_gateway_protocol")
+    public Response<GatewayConfigResponseDTO> importGatewayProtocol(@RequestBody GatewayConfigRequestDTO.GatewayProtocolImport req) {
+        try {
+            log.info("导入协议 endpoints:{}", req.getEndpoints());
+            List<HTTPProtocolVO> vos = protocolAnalysis.doAnalysis(AnalysisCommandEntity.builder()
+                    .type(AnalysisTypeEnum.swagger).openApiJson(req.getOpenApiJson()).endpoints(req.getEndpoints()).build());
+            protocolStorage.doStorage(StorageCommandEntity.builder().httpProtocolVOS(vos).build());
+            return ok();
+        } catch (Exception e) { return fail(e, "导入协议"); }
+    }
+
+    @PostMapping("analysis_protocol")
+    public Response<List<GatewayProtocolDTO>> analysisProtocol(@RequestBody GatewayConfigRequestDTO.GatewayProtocolImport req) {
+        try {
+            log.info("解析协议预览 endpoints:{}", req.getEndpoints());
+            List<HTTPProtocolVO> vos = protocolAnalysis.doAnalysis(AnalysisCommandEntity.builder()
+                    .type(AnalysisTypeEnum.swagger).openApiJson(req.getOpenApiJson()).endpoints(req.getEndpoints()).build());
+            List<GatewayProtocolDTO> dtos = vos.stream().map(v -> {
+                GatewayProtocolDTO dto = GatewayProtocolDTO.builder()
+                        .protocolId(v.getProtocolId()).httpUrl(v.getHttpUrl()).httpMethod(v.getHttpMethod())
+                        .httpHeaders(v.getHttpHeaders()).timeout(v.getTimeout()).build();
+                if (v.getMappings() != null) dto.setMappings(v.getMappings().stream().map(m -> GatewayProtocolDTO.ProtocolMappingDTO.builder()
+                        .mappingType(m.getMappingType()).parentPath(m.getParentPath()).fieldName(m.getFieldName())
+                        .mcpPath(m.getMcpPath()).mcpType(m.getMcpType()).mcpDesc(m.getMcpDesc())
+                        .isRequired(m.getIsRequired()).sortOrder(m.getSortOrder()).build()).collect(Collectors.toList()));
+                return dto;
+            }).collect(Collectors.toList());
+            return Response.<List<GatewayProtocolDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo()).data(dtos).build();
+        } catch (Exception e) { return failResp(e, "解析协议"); }
+    }
+
+    // ==================== 查询 ====================
+
     @GetMapping("query_gateway_config_list")
-    @Override
     public Response<List<GatewayConfigDTO>> queryGatewayConfigList() {
         try {
-            log.info("查询网关配置列表开始");
-            List<GatewayConfigEntity> entities = adminManageService.queryGatewayConfigList();
-            List<GatewayConfigDTO> dtoList = entities.stream().map(e -> GatewayConfigDTO.builder()
-                    .gatewayId(e.getGatewayId())
-                    .gatewayName(e.getGatewayName())
-                    .gatewayDesc(e.getGatewayDesc())
-                    .version(e.getVersion())
-                    .auth(e.getAuth())
-                    .status(e.getStatus())
-                    .build()).collect(Collectors.toList());
-            log.info("查询网关配置列表完成 count:{}", dtoList.size());
-            return Response.<List<GatewayConfigDTO>>builder()
-                    .code(ResponseCode.SUCCESS.getCode())
-                    .info(ResponseCode.SUCCESS.getInfo())
-                    .data(dtoList)
-                    .build();
-        } catch (Exception e) {
-            log.error("查询网关配置列表失败", e);
-            return Response.<List<GatewayConfigDTO>>builder()
-                    .code(ResponseCode.UN_ERROR.getCode())
-                    .info(ResponseCode.UN_ERROR.getInfo())
-                    .build();
-        }
+            List<GatewayConfigEntity> list = adminManageService.queryGatewayConfigList();
+            return Response.<List<GatewayConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
+                    .data(list.stream().map(e -> GatewayConfigDTO.builder().gatewayId(e.getGatewayId()).gatewayName(e.getGatewayName())
+                            .gatewayDesc(e.getGatewayDesc()).version(e.getVersion()).auth(e.getAuth()).status(e.getStatus()).build())
+                            .collect(Collectors.toList())).build();
+        } catch (Exception e) { return failResp(e, "查询网关列表"); }
+    }
+
+    @PostMapping("query_gateway_config_page")
+    public ResponsePage<List<GatewayConfigDTO>> queryGatewayConfigPage(@RequestBody GatewayConfigQueryDTO q) {
+        try {
+            GatewayConfigPageEntity p = adminManageService.queryGatewayConfigPage(GatewayConfigQueryEntity.builder()
+                    .gatewayId(q.getGatewayId()).gatewayName(q.getGatewayName()).page(q.getPage()).rows(q.getRows()).build());
+            List<GatewayConfigDTO> dtos = p.getDataList().stream().map(e -> GatewayConfigDTO.builder()
+                    .gatewayId(e.getGatewayId()).gatewayName(e.getGatewayName()).gatewayDesc(e.getGatewayDesc())
+                    .version(e.getVersion()).auth(e.getAuth()).status(e.getStatus()).build()).collect(Collectors.toList());
+            return ResponsePage.<List<GatewayConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo()).data(dtos).total(p.getTotal()).build();
+        } catch (Exception e) { return failPage(e, "查询网关分页"); }
+    }
+
+    @GetMapping("query_gateway_tool_list")
+    public Response<List<GatewayToolConfigDTO>> queryGatewayToolList() {
+        try {
+            List<GatewayToolConfigEntity> list = adminManageService.queryGatewayToolList();
+            return Response.<List<GatewayToolConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
+                    .data(list.stream().map(this::toToolDTO).collect(Collectors.toList())).build();
+        } catch (Exception e) { return failResp(e, "查询工具列表"); }
+    }
+
+    @PostMapping("query_gateway_tool_page")
+    public ResponsePage<List<GatewayToolConfigDTO>> queryGatewayToolPage(@RequestBody GatewayToolQueryDTO q) {
+        try {
+            GatewayToolPageEntity p = adminManageService.queryGatewayToolPage(GatewayToolQueryEntity.builder()
+                    .gatewayId(q.getGatewayId()).toolName(q.getToolName()).page(q.getPage()).rows(q.getRows()).build());
+            return ResponsePage.<List<GatewayToolConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
+                    .data(p.getDataList().stream().map(this::toToolDTO).collect(Collectors.toList())).total(p.getTotal()).build();
+        } catch (Exception e) { return failPage(e, "查询工具分页"); }
+    }
+
+    @GetMapping("query_gateway_tool_list_by_gateway_id")
+    public Response<List<GatewayToolConfigDTO>> queryGatewayToolListByGatewayId(@RequestParam String gatewayId) {
+        try {
+            List<GatewayToolConfigEntity> list = adminManageService.queryGatewayToolListByGatewayId(gatewayId);
+            return Response.<List<GatewayToolConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
+                    .data(list.stream().map(this::toToolDTO).collect(Collectors.toList())).build();
+        } catch (Exception e) { return failResp(e, "查询网关工具"); }
+    }
+
+    @GetMapping("query_gateway_protocol_list")
+    public Response<List<GatewayProtocolDTO>> queryGatewayProtocolList() {
+        try {
+            return Response.<List<GatewayProtocolDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
+                    .data(adminManageService.queryGatewayProtocolList().stream().map(this::toProtocolDTO).collect(Collectors.toList())).build();
+        } catch (Exception e) { return failResp(e, "查询协议列表"); }
+    }
+
+    @PostMapping("query_gateway_protocol_page")
+    public ResponsePage<List<GatewayProtocolDTO>> queryGatewayProtocolPage(@RequestBody GatewayProtocolQueryDTO q) {
+        try {
+            GatewayProtocolPageEntity p = adminManageService.queryGatewayProtocolPage(GatewayProtocolQueryEntity.builder()
+                    .protocolId(q.getProtocolId()).httpUrl(q.getHttpUrl()).page(q.getPage()).rows(q.getRows()).build());
+            return ResponsePage.<List<GatewayProtocolDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
+                    .data(p.getDataList().stream().map(this::toProtocolDTO).collect(Collectors.toList())).total(p.getTotal()).build();
+        } catch (Exception e) { return failPage(e, "查询协议分页"); }
+    }
+
+    @GetMapping("query_gateway_protocol_list_by_gateway_id")
+    public Response<List<GatewayProtocolDTO>> queryGatewayProtocolListByGatewayId(@RequestParam String gatewayId) {
+        try {
+            return Response.<List<GatewayProtocolDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
+                    .data(adminManageService.queryGatewayProtocolListByGatewayId(gatewayId).stream().map(this::toProtocolDTO).collect(Collectors.toList())).build();
+        } catch (Exception e) { return failResp(e, "查询网关协议"); }
+    }
+
+    @GetMapping("query_gateway_auth_list")
+    public Response<List<GatewayAuthDTO>> queryGatewayAuthList() {
+        try {
+            return Response.<List<GatewayAuthDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
+                    .data(adminManageService.queryGatewayAuthList().stream().map(this::toAuthDTO).collect(Collectors.toList())).build();
+        } catch (Exception e) { return failResp(e, "查询鉴权列表"); }
+    }
+
+    @PostMapping("query_gateway_auth_page")
+    public ResponsePage<List<GatewayAuthDTO>> queryGatewayAuthPage(@RequestBody GatewayAuthQueryDTO q) {
+        try {
+            GatewayAuthPageEntity p = adminManageService.queryGatewayAuthPage(GatewayAuthQueryEntity.builder()
+                    .gatewayId(q.getGatewayId()).apiKey(q.getApiKey()).page(q.getPage()).rows(q.getRows()).build());
+            return ResponsePage.<List<GatewayAuthDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
+                    .data(p.getDataList().stream().map(this::toAuthDTO).collect(Collectors.toList())).total(p.getTotal()).build();
+        } catch (Exception e) { return failPage(e, "查询鉴权分页"); }
+    }
+
+    // ==================== 删除 ====================
+
+    @PostMapping("delete_gateway_tool_config")
+    public Response<GatewayConfigResponseDTO> deleteGatewayToolConfig(@RequestParam String gatewayId, @RequestParam Long toolId) {
+        try {
+            log.info("删除工具 gatewayId:{} toolId:{}", gatewayId, toolId);
+            return ok();
+        } catch (Exception e) { return fail(e, "删除工具"); }
+    }
+
+    @PostMapping("delete_gateway_auth")
+    public Response<GatewayConfigResponseDTO> deleteGatewayAuth(@RequestParam String gatewayId) {
+        try {
+            log.info("删除鉴权 gatewayId:{}", gatewayId);
+            adminAuthService.deleteGatewayAuth(gatewayId);
+            return ok();
+        } catch (Exception e) { return fail(e, "删除鉴权"); }
+    }
+
+    // ==================== helpers ====================
+
+    private StorageCommandEntity toStorageCommand(java.util.List<GatewayConfigRequestDTO.GatewayProtocol.HTTPProtocol> list) {
+        StorageCommandEntity cmd = new StorageCommandEntity();
+        if (list != null) cmd.setHttpProtocolVOS(list.stream().map(p -> {
+            HTTPProtocolVO vo = new HTTPProtocolVO();
+            vo.setProtocolId(p.getProtocolId()); vo.setHttpUrl(p.getHttpUrl()); vo.setHttpHeaders(p.getHttpHeaders());
+            vo.setHttpMethod(p.getHttpMethod()); vo.setTimeout(p.getTimeout());
+            if (p.getMappings() != null) vo.setMappings(p.getMappings().stream().map(m -> HTTPProtocolVO.ProtocolMapping.builder()
+                    .mappingType(m.getMappingType()).parentPath(m.getParentPath()).fieldName(m.getFieldName())
+                    .mcpPath(m.getMcpPath()).mcpType(m.getMcpType()).mcpDesc(m.getMcpDesc())
+                    .isRequired(m.getIsRequired()).sortOrder(m.getSortOrder()).build()).collect(Collectors.toList()));
+            return vo;
+        }).collect(Collectors.toList()));
+        return cmd;
+    }
+
+    private GatewayToolConfigDTO toToolDTO(GatewayToolConfigEntity e) {
+        return GatewayToolConfigDTO.builder().gatewayId(e.getGatewayId()).toolId(e.getToolId()).toolName(e.getToolName())
+                .toolType(e.getToolType()).toolDescription(e.getToolDescription()).toolVersion(e.getToolVersion())
+                .protocolId(e.getProtocolId()).protocolType(e.getProtocolType()).build();
+    }
+
+    private GatewayProtocolDTO toProtocolDTO(GatewayProtocolConfigEntity e) {
+        GatewayProtocolDTO dto = GatewayProtocolDTO.builder().protocolId(e.getProtocolId()).httpUrl(e.getHttpUrl())
+                .httpMethod(e.getHttpMethod()).httpHeaders(e.getHttpHeaders()).timeout(e.getTimeout()).build();
+        if (e.getMappings() != null) dto.setMappings(e.getMappings().stream().map(m -> GatewayProtocolDTO.ProtocolMappingDTO.builder()
+                .mappingType(m.getMappingType()).parentPath(m.getParentPath()).fieldName(m.getFieldName())
+                .mcpPath(m.getMcpPath()).mcpType(m.getMcpType()).mcpDesc(m.getMcpDesc())
+                .isRequired(m.getIsRequired()).sortOrder(m.getSortOrder()).build()).collect(Collectors.toList()));
+        return dto;
+    }
+
+    private GatewayAuthDTO toAuthDTO(GatewayAuthConfigEntity e) {
+        return GatewayAuthDTO.builder().gatewayId(e.getGatewayId()).apiKey(e.getApiKey()).rateLimit(e.getRateLimit()).expireTime(e.getExpireTime()).build();
+    }
+
+    private Response<GatewayConfigResponseDTO> ok() {
+        return Response.<GatewayConfigResponseDTO>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
+                .data(GatewayConfigResponseDTO.builder().success(true).build()).build();
+    }
+
+    private Response<GatewayConfigResponseDTO> fail(Exception e, String op) {
+        log.error("{}失败", op, e);
+        return Response.<GatewayConfigResponseDTO>builder().code(ResponseCode.UN_ERROR.getCode()).info(ResponseCode.UN_ERROR.getInfo()).build();
+    }
+
+    private <T> Response<T> failResp(Exception e, String op) {
+        log.error("{}失败", op, e);
+        return Response.<T>builder().code(ResponseCode.UN_ERROR.getCode()).info(ResponseCode.UN_ERROR.getInfo()).build();
+    }
+
+    private <T> ResponsePage<T> failPage(Exception e, String op) {
+        log.error("{}失败", op, e);
+        return ResponsePage.<T>builder().code(ResponseCode.UN_ERROR.getCode()).info(ResponseCode.UN_ERROR.getInfo()).data(null).total(0L).build();
     }
 
 }
