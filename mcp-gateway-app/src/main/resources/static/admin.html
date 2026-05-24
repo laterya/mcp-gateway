@@ -42,6 +42,12 @@ td{padding:12px 20px;font-size:13px;border-bottom:1px solid var(--brd)}tr{transi
 .bad-str{background:rgba(96,165,250,0.12);color:var(--in);border:1px solid rgba(96,165,250,0.2)}
 .bad-no{background:rgba(251,191,36,0.1);color:var(--wa);border:1px solid rgba(251,191,36,0.18)}
 .bad-d{width:5px;height:5px;border-radius:50%;display:inline-block}.bad-d.on{background:var(--su);box-shadow:0 0 4px var(--su)}.bad-d.off{background:var(--tx3)}
+.mp-toggle{cursor:pointer;color:var(--ac);font-family:var(--m);font-size:12px;user-select:none;display:inline-flex;align-items:center;gap:4px}.mp-toggle:hover{text-decoration:underline}
+.mp-arrow{transition:transform var(--t);display:inline-block;font-size:10px}.mp-arrow.open{transform:rotate(90deg)}
+.mp-detail{background:var(--bg);border:1px solid var(--brd);border-radius:var(--r);margin-top:8px;font-size:12px}
+.mp-detail table{margin:0}th.mp-th{padding:6px 12px;font-size:10px}.mp-detail td{padding:6px 12px;font-size:12px;font-family:var(--m)}
+.mp-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600}
+.mp-tag-req{background:rgba(96,165,250,0.12);color:var(--in)}.mp-tag-res{background:rgba(52,211,153,0.12);color:var(--su)}
 .co{font-family:var(--m);font-size:12px;color:var(--ac)}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:16px}.fg.fl{grid-template-columns:1fr}
 .fc{background:var(--srf);border:1px solid var(--brd);border-radius:var(--r3);padding:24px;margin-bottom:16px}
@@ -96,6 +102,8 @@ textarea{min-height:100px}select{cursor:pointer;appearance:none;background-image
   <div class="ni" data-sec="tool-create"><span class="ico">+⚙</span><span>新增工具</span></div>
   <div class="ni" data-sec="auth-create"><span class="ico">+🔑</span><span>新增鉴权</span></div>
   <div class="ni" data-sec="protocol-create"><span class="ico">+⎔</span><span>新增协议</span></div>
+  <div class="nd"><span>测试</span></div>
+  <div class="ni" data-sec="gateway-test"><span class="ico">◈</span><span>网关测试</span></div>
 </div>
 <div class="mn">
   <div class="tb"><div class="st"><span class="dot"></span>localhost:8090/api-gateway/admin</div><button class="bt bt-sm" id="theme-toggle" onclick="toggleTheme()" style="font-size:16px;padding:4px 8px" title="切换日间/夜间模式">☀️</button></div>
@@ -151,6 +159,46 @@ textarea{min-height:100px}select{cursor:pointer;appearance:none;background-image
     <div class="sec" id="sec-auth-create"><div class="fc"><h2><span class="tag tp">POST</span> 新增鉴权</h2><div class="fg"><div class="fgi"><label>Gateway ID <span class="req">*</span></label><input class="mono" id="ac-id" placeholder="gateway_003"></div><div class="fgi"><label>限流配额（次/小时）</label><input class="mono" id="ac-rl" type="number" value="1000"></div><div class="fgi"><label>过期时间</label><input id="ac-ex" type="datetime-local"><div class="hint">留空=永不过期</div></div></div><div class="fa"><button class="bt bt-pr" onclick="saveGatewayAuth()">生成 API Key</button></div></div></div>
     <!-- ====== 新增协议 ====== -->
     <div class="sec" id="sec-protocol-create"><div class="fc"><h2><span class="tag tp">POST</span> 新增协议</h2><div class="fg"><div class="fgi"><label>Protocol ID</label><input class="mono" id="pc-id" type="number" placeholder="自动生成"></div><div class="fgi"><label>HTTP方法 <span class="req">*</span></label><select id="pc-mt"><option value="post">POST</option><option value="get">GET</option></select></div><div class="fgi fl"><label>HTTP URL <span class="req">*</span></label><input class="mono" id="pc-ur" placeholder="http://localhost:8701/api/v1/mcp/test"></div><div class="fgi"><label>超时(ms)</label><input class="mono" id="pc-to" type="number" value="30000"></div><div class="fgi"><label>请求头(JSON)</label><input class="mono" id="pc-hd" value='{"Content-Type":"application/json"}'></div><div class="fgi fl"><label>Mappings（JSON Array）<span class="req">*</span></label><textarea class="mono" id="pc-mp" placeholder='[{"mappingType":"request","parentPath":null,"fieldName":"city","mcpPath":"city","mcpType":"string","mcpDesc":"城市","isRequired":1,"sortOrder":1}]'></textarea></div></div><div class="fa"><button class="bt bt-pr" onclick="saveProtocol()">保存协议</button></div></div></div>
+    <!-- ====== 网关测试 ====== -->
+    <div class="sec" id="sec-gateway-test">
+      <div style="display:grid;grid-template-columns:380px 1fr;gap:20px;min-height:500px">
+        <!-- 左侧：测试配置 -->
+        <div class="fc" style="margin-bottom:0;display:flex;flex-direction:column">
+          <h2>◈ 测试配置</h2>
+          <div class="fgi" style="margin-bottom:14px"><label>选择网关 <span class="req">*</span></label>
+            <select id="gt-gw" onchange="onTestGwChange()"><option value="">请选择网关...</option></select>
+            <div class="hint" id="gt-gw-desc">-</div>
+          </div>
+          <div class="fgi" id="gt-auth-wrap" style="margin-bottom:14px;display:none"><label>Auth Key</label>
+            <select id="gt-auth"><option value="">请选择认证 Key...</option></select>
+            <div class="hint">网关已启用鉴权，请选择对应的 Key</div>
+          </div>
+          <div class="fgi" style="margin-bottom:14px"><label>超时时间(秒)</label>
+            <div style="display:flex;gap:8px"><input class="mono" id="gt-to" type="number" value="60" min="10" max="600" style="flex:1"><button class="bt bt-sm" onclick="document.getElementById('gt-to').value=60">重置</button></div>
+          </div>
+          <div class="fgi" style="margin-bottom:14px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="gt-reload" style="width:auto">协议变更后重新加载 LLM</label>
+          </div>
+          <div class="fgi" style="margin-bottom:18px"><label>请求消息 <span class="req">*</span></label>
+            <textarea id="gt-msg" rows="6" placeholder="请输入对话内容，例如：&#10;查询北京的员工信息&#10;查询ID为1的员工详情&#10;公司有哪些部门"></textarea>
+          </div>
+          <div style="margin-top:auto"><button class="bt bt-pr" style="width:100%;padding:12px;font-size:14px" id="gt-send" onclick="sendTestCall()">发送测试请求</button></div>
+        </div>
+        <!-- 右侧：对话结果 -->
+        <div class="fc" style="margin-bottom:0;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h2 style="margin-bottom:0">对话结果</h2>
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="font-size:11px;color:var(--tx3);font-family:var(--m)" id="gt-cost"></span>
+              <button class="bt bt-sm" onclick="clearChat()">清空</button>
+            </div>
+          </div>
+          <div id="gt-chat" style="flex:1;overflow-y:auto;background:var(--elv);border:1px solid var(--brd2);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-height:300px">
+            <div style="text-align:center;color:var(--tx3);padding:40px 0;font-size:13px" id="gt-empty">暂无对话，请配置参数后发送测试请求</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <!-- Edit Modal -->
@@ -252,9 +300,10 @@ regLoad('auth-list',loadAuthList);
 async function loadProtocolList(){const tb=document.getElementById('pl-tb');tb.innerHTML='<tr><td colspan="5" class="ld"><span class="sp"></span>加载中...</td></tr>';
 try{const d=await apig('/query_gateway_protocol_list');if(d?.code==='0000'&&d.data){plAll=d.data;plPg=1;renderPlPage()}else tb.innerHTML='<tr><td colspan="5" class="em">暂无数据</td></tr>'}catch(e){tb.innerHTML='<tr><td colspan="5" class="em" style="color:var(--er)">请求失败</td></tr>'}}
 function renderPlPage(){const p=pgList(plAll,plPg,renderPlPage,'pl-tb');
-document.getElementById('pl-tb').innerHTML=p.sliced.length?p.sliced.map(i=>`<tr><td style="font-family:var(--m)">${i.protocolId}</td><td style="font-family:var(--m)">${(i.httpMethod||'').toUpperCase()}</td><td><span class="co">${esc(i.httpUrl)}</span></td><td>${(i.mappings||[]).length}</td><td><button class="bt bt-er bt-sm" onclick="delProtocol(${i.protocolId})">删除</button></td></tr>`).join(''):'<tr><td colspan="5" class="em">暂无数据</td></tr>';
+document.getElementById('pl-tb').innerHTML=p.sliced.length?p.sliced.map(i=>{const mp=i.mappings||[];const reqM=mp.filter(m=>m.mappingType==='request'),resM=mp.filter(m=>m.mappingType==='response');return`<tr><td style="font-family:var(--m)">${i.protocolId}</td><td style="font-family:var(--m)">${(i.httpMethod||'').toUpperCase()}</td><td><span class="co">${esc(i.httpUrl)}</span></td><td><span class="mp-toggle" onclick="toggleMapping(this)"><span class="mp-arrow">▶</span>${mp.length} 条</span><div class="mp-detail" style="display:none"><table>${reqM.length?`<tr><th class="mp-th" colspan="5"><span class="mp-tag mp-tag-req">REQUEST</span> ${reqM.length} 条</th></tr>`+reqM.map(m=>`<tr><td style="color:var(--in);width:40%">${esc(m.mcpPath)}</td><td style="color:var(--tx3)">${m.mcpType}</td><td style="color:var(--tx2)">${esc(m.mcpDesc||'')}</td><td style="color:${m.isRequired?'var(--wa)':'var(--tx3)'}">${m.isRequired?'必填':'可选'}</td></tr>`).join(''):''} ${resM.length?`<tr><th class="mp-th" colspan="5"><span class="mp-tag mp-tag-res">RESPONSE</span> ${resM.length} 条</th></tr>`+resM.map(m=>`<tr><td style="color:var(--su);width:40%">${esc(m.mcpPath)}</td><td style="color:var(--tx3)">${m.mcpType}</td><td style="color:var(--tx2)">${esc(m.mcpDesc||'')}</td></tr>`).join(''):''}</table></div></td><td><button class="bt bt-er bt-sm" onclick="delProtocol(${i.protocolId})">删除</button></td></tr>`}).join(''):'<tr><td colspan="5" class="em">暂无数据</td></tr>';
 renderPg(plPg,p.total,'pl-pg',p=>{plPg=p;renderPlPage()})}
 async function delProtocol(pid){if(!confirm(`删除协议 ${pid} 及其映射？`))return;await apip(`/delete_gateway_protocol?protocolId=${pid}`,{});loadProtocolList()}
+function toggleMapping(el){const d=el.nextElementSibling,arr=el.querySelector('.mp-arrow');if(d.style.display==='none'){d.style.display='block';arr.classList.add('open')}else{d.style.display='none';arr.classList.remove('open')}}
 regLoad('protocol-list',loadProtocolList);
 
 // Import / Analysis
@@ -303,6 +352,70 @@ function saveGatewayConfig(){const b={gatewayId:document.getElementById('gc-id')
 function saveToolConfig(){const b={gatewayId:document.getElementById('tc-id').value,toolId:parseInt(document.getElementById('tc-tid').value),toolName:document.getElementById('tc-nm').value,toolType:document.getElementById('tc-tp').value,toolDescription:document.getElementById('tc-ds').value,toolVersion:document.getElementById('tc-v').value,protocolId:parseInt(document.getElementById('tc-pid').value),protocolType:document.getElementById('tc-pt').value};apip('/save_gateway_tool_config',b)}
 function saveGatewayAuth(){const ex=document.getElementById('ac-ex').value,body={gatewayId:document.getElementById('ac-id').value,rateLimit:parseInt(document.getElementById('ac-rl').value),expireTime:ex?new Date(ex).toISOString().replace('Z',''):null};apip('/save_gateway_auth',body)}
 function saveProtocol(){let mp=null;const r=document.getElementById('pc-mp').value.trim();if(r){try{mp=JSON.parse(r)}catch(e){toast('Mappings JSON 格式错误',false);return}}const body={httpProtocols:[{protocolId:parseInt(document.getElementById('pc-id').value)||null,httpUrl:document.getElementById('pc-ur').value,httpMethod:document.getElementById('pc-mt').value,timeout:parseInt(document.getElementById('pc-to').value),httpHeaders:document.getElementById('pc-hd').value,mappings:mp}]};apip('/save_gateway_protocol',body)}
+
+// === Gateway Test ===
+let testGwList=[], testAuthList=[];
+async function loadTestConfig(){
+  try{
+    const d=await apig('/query_gateway_config_list');
+    testGwList=d?.code==='0000'?d.data:[];
+    const sel=document.getElementById('gt-gw');
+    sel.innerHTML='<option value="">请选择网关...</option>'+testGwList.map(g=>`<option value="${g.gatewayId}" data-auth="${g.auth}" data-desc="${esc(g.gatewayDesc||'')}">${g.gatewayName||g.gatewayId}</option>`).join('');
+  }catch(e){}
+  try{
+    const d=await apig('/query_gateway_auth_list');
+    testAuthList=d?.code==='0000'?d.data:[];
+  }catch(e){}
+}
+function onTestGwChange(){
+  const gwId=document.getElementById('gt-gw').value;
+  const opt=document.getElementById('gt-gw').selectedOptions[0];
+  const auth=opt?.dataset?.auth;
+  document.getElementById('gt-gw-desc').textContent=opt?.dataset?.desc||'-';
+  const wrap=document.getElementById('gt-auth-wrap');
+  if(auth==='1'){
+    wrap.style.display='block';
+    const keys=testAuthList.filter(a=>a.gatewayId===gwId);
+    document.getElementById('gt-auth').innerHTML='<option value="">请选择认证 Key...</option>'+keys.map(a=>`<option value="${esc(a.apiKey)}">${esc(a.apiKey)}</option>`).join('');
+  }else{wrap.style.display='none';document.getElementById('gt-auth').value=''}
+}
+async function sendTestCall(){
+  const gwId=document.getElementById('gt-gw').value;
+  const msg=document.getElementById('gt-msg').value.trim();
+  if(!gwId){toast('请选择网关',false);return}
+  if(!msg){toast('请输入消息',false);return}
+  const apiKey=document.getElementById('gt-auth').value;
+  const timeout=parseInt(document.getElementById('gt-to').value)||60;
+  const reload=document.getElementById('gt-reload').checked;
+  const btn=document.getElementById('gt-send');
+  btn.disabled=true;btn.innerHTML='<span class="sp"></span>请求中...';
+  appendMsg('user',msg);
+  const t0=Date.now();
+  try{
+    const r=await fetch(B+'/test_call_gateway',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gatewayId:gwId,message:msg,apiKey:apiKey||null,timeout,reload})});
+    const d=await r.json();
+    const cost=Date.now()-t0;
+    document.getElementById('gt-cost').textContent=`耗时 ${cost}ms`;
+    if(d?.code==='0000'&&d.data?.success){appendMsg('assistant',d.data.content);toast('调用成功')}
+    else{appendMsg('error',d?.data?.content||d?.info||'未知错误');toast(d?.info||'调用失败',false)}
+  }catch(e){appendMsg('error','网络请求失败: '+e.message);toast('请求失败',false)}
+  btn.disabled=false;btn.textContent='发送测试请求';
+}
+function appendMsg(type,text){
+  const empty=document.getElementById('gt-empty');if(empty)empty.remove();
+  const chat=document.getElementById('gt-chat');
+  const div=document.createElement('div');
+  div.style.cssText='padding:10px 14px;border-radius:var(--r);font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-width:90%';
+  if(type==='user'){div.style.cssText+=';background:var(--acd);color:var(--ac);align-self:flex-end';div.textContent='👤 '+text}
+  else if(type==='assistant'){div.style.cssText+=';background:var(--hvr);color:var(--txt);align-self:flex-start';div.textContent='🤖 '+text}
+  else{div.style.cssText+=';background:rgba(248,113,113,0.1);color:var(--er);align-self:flex-start';div.textContent='⚠ '+text}
+  chat.appendChild(div);chat.scrollTop=chat.scrollHeight
+}
+function clearChat(){
+  document.getElementById('gt-chat').innerHTML='<div style="text-align:center;color:var(--tx3);padding:40px 0;font-size:13px" id="gt-empty">暂无对话，请配置参数后发送测试请求</div>';
+  document.getElementById('gt-cost').textContent=''
+}
+regLoad('gateway-test',loadTestConfig);
 
 // Login check
 if(localStorage.getItem('mcp_admin_logged_in')!=='true')window.location.href='index.html';

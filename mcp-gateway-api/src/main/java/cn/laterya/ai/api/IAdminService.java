@@ -41,4 +41,7 @@ public interface IAdminService {
     Response<GatewayConfigResponseDTO> deleteGatewayToolConfig(String gatewayId, Long toolId);
     Response<GatewayConfigResponseDTO> deleteGatewayAuth(String gatewayId);
 
+    // ===== LLM 测试 =====
+    Response<GatewayLLMTestResponseDTO> testCallGateway(GatewayLLMTestRequestDTO requestDTO);
+
 }

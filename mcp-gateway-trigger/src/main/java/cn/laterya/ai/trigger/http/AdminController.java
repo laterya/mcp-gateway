@@ -5,6 +5,7 @@ import cn.laterya.ai.api.dto.*;
 import cn.laterya.ai.api.response.Response;
 import cn.laterya.ai.api.response.ResponsePage;
 import cn.laterya.ai.cases.admin.*;
+import cn.laterya.ai.cases.admin.IAdminLLMService;
 import cn.laterya.ai.domain.admin.model.entity.*;
 import cn.laterya.ai.domain.auth.model.entity.RegisterCommandEntity;
 import cn.laterya.ai.domain.gateway.model.entity.GatewayConfigCommandEntity;
@@ -38,6 +39,7 @@ public class AdminController implements IAdminService {
     @Resource private IAdminAuthService adminAuthService;
     @Resource private IAdminProtocolService adminProtocolService;
     @Resource private IAdminManageService adminManageService;
+    @Resource private IAdminLLMService adminLLMService;
     @Resource private IProtocolAnalysis protocolAnalysis;
     @Resource private IProtocolStorage protocolStorage;
 
@@ -257,6 +259,32 @@ public class AdminController implements IAdminService {
             return ok();
         } catch (Exception e) { return fail(e, "更新鉴权"); }
     }
+    // ==================== LLM 测试 ====================
+
+    @PostMapping("test_call_gateway")
+    @Override
+    public Response<GatewayLLMTestResponseDTO> testCallGateway(@RequestBody GatewayLLMTestRequestDTO req) {
+        try {
+            log.info("测试调用网关 gatewayId:{} message:{}", req.getGatewayId(), req.getMessage());
+            String content = adminLLMService.testCallGateway(
+                    req.getGatewayId(),
+                    req.getMessage(),
+                    req.getApiKey(),
+                    req.getTimeout() != null ? req.getTimeout() : 60L,
+                    req.getReload() != null && req.getReload());
+            return Response.<GatewayLLMTestResponseDTO>builder()
+                    .code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
+                    .data(GatewayLLMTestResponseDTO.builder().content(content).success(true).build())
+                    .build();
+        } catch (Exception e) {
+            log.error("测试调用网关失败 gatewayId:{}", req.getGatewayId(), e);
+            return Response.<GatewayLLMTestResponseDTO>builder()
+                    .code(ResponseCode.UN_ERROR.getCode()).info(e.getMessage())
+                    .data(GatewayLLMTestResponseDTO.builder().success(false).content(e.getMessage()).build())
+                    .build();
+        }
+    }
+
     // ==================== helpers ====================
 
     private StorageCommandEntity toStorageCommand(java.util.List<GatewayConfigRequestDTO.GatewayProtocol.HTTPProtocol> list) {

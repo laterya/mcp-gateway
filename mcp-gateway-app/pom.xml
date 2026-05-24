@@ -47,18 +47,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Spring AI OpenAI（测试用） -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-model-openai</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- MCP Client（测试用，含 JDK HttpClient SSE 传输） -->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-mcp-client</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>

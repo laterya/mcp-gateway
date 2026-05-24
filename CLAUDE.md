@@ -7,9 +7,9 @@
 - JDK 21 + Spring Boot 3.5 + Spring AI 1.1.2
 - Maven 多模块 + Lombok + Project Reactor
 - MyBatis 3.0 + MySQL 8.0（DAO 层）
-- Guava 33.4（RateLimiter 令牌桶）+ Apache Commons Lang3（API Key 生成）
+- Guava 33.4（RateLimiter 令牌桶）+ Apache Commons Lang3（API Key 生成）+ Jackson（JSON 解析）
 - SSE（Server-Sent Events）作为 MCP 传输协议
-- Spring AI 仅在 test scope（MCP Client 测试用）
+- Spring AI 1.1.2（OpenAiChatModel + MCP Client SSE Transport，domain/llm 限界上下文）
 
 ## Commands
 
@@ -20,11 +20,22 @@ mvn spring-boot:run -pl mcp-gateway-app                           # 启动服务
 mvn test -pl mcp-gateway-app                                      # 运行所有测试（需 Docker MySQL）
 mvn test -pl mcp-gateway-app -Dtest="cn.laterya.ai.dao.**"        # 仅 DAO 测试
 mvn test -pl mcp-gateway-app -Dtest="cn.laterya.ai.domain.auth.**" # 仅鉴权测试
+mvn test -pl mcp-gateway-app -Dtest="cn.laterya.ai.domain.protocol.**" # 仅协议测试
+mvn test -pl mcp-gateway-app -Dtest="cn.laterya.ai.domain.gateway.**" # 仅网关配置测试
 ```
 
 **ApiTest 运行前提：** 先 `mvn spring-boot:run -pl mcp-gateway-app` 启动服务，再运行测试。测试使用 `gateway_001`（数据库种子数据中的网关 ID）。
 
 **环境要求：** Docker MySQL 运行在 13306 端口，数据库 `mcp_gateway`。API 集成测试需设置 `OPENAI_API_KEY` 和 `OPENAI_BASE_URL` 环境变量。
+
+**管理后台：**
+```bash
+cd ../mcp-gateway-demo-server && mvn spring-boot:run     # 启动 Swagger 测试服务（8701 端口）
+# 管理后台已内嵌在网关静态资源中，启动网关后直接访问：
+# http://localhost:8090/api-gateway/index.html（登录 admin/password123）
+```
+
+**demo-server** 是独立测试项目（`../mcp-gateway-demo-server`），带 Swagger 注解的 Web 接口，用于验证 OpenAPI JSON 解析。启动后访问 `http://localhost:8701/v3/api-docs` 获取 JSON。
 
 ## Architecture — DDD Hexagonal (7 Modules)
 
@@ -41,32 +52,37 @@ app       (Spring Boot 启动模块，装配层)
 | Module | Layer | Responsibility |
 |--------|-------|---------------|
 | `types` | 基础类型 | 通用响应、常量、异常、工具类 |
-| `domain` | 领域层 | 实体、值对象、领域服务、Port 接口。含 `session` 和 `auth` 两个限界上下文 |
-| `case` | 用例层 | 编排领域服务，事务边界（依赖 spring-tx、spring-web）。含两条责任链：session 编排（建立 SSE 连接）和 message 编排（消息处理） |
+| `domain` | 领域层 | 实体、值对象、领域服务、Port 接口。含 6 个限界上下文：`session` / `auth` / `protocol` / `gateway` / `admin` / `llm` |
+| `case` | 用例层 | 编排领域服务，事务边界（依赖 spring-tx、spring-web）。含 mcp 编排（session/message 两条责任链）和 admin 编排（CRUD 转发） |
 | `infrastructure` | 基础设施层 | 实现 domain 的 Port，对接外部系统 |
 | `api` | 接口定义 | 对外 Facade 接口 + DTO |
 | `trigger` | 触发器层 | HTTP Controller，调用 case/api |
 | `app` | 启动模块 | Application.java + application.yml |
 
 **依赖规则（重要）：**
-- domain 只依赖 types，不依赖任何框架（唯一例外：reactor-core）
-- infrastructure 实现 domain 定义的 Port 接口（依赖倒置）
+- domain 原则上只依赖 types，已知例外：reactor-core（响应式流）、Spring AI（LLM 限界上下文）
+- infrastructure 实现 domain 定义的 Port 接口（依赖倒置，接口在 `domain/*/adapter/repository/`，实现在 `infrastructure/adapter/repository/`）
 - trigger → case → domain，不允许反向依赖
 - 所有模块共享 `cn.laterya.ai` 基础包名
 
-**依赖倒置路径（adapter）：**
-```
-domain/session/adapter/repository/ISessionRepository.java   ← 接口定义
-domain/auth/adapter/repository/IAuthRepository.java         ← 接口定义
-infrastructure/adapter/repository/SessionRepository.java    ← 实现（注入 DAO）
-infrastructure/adapter/repository/AuthRepository.java       ← 实现（注入 DAO）
-```
+**Auth 限界上下文（domain/auth/）：** 注册（gw- 前缀 API Key）→ 鉴权（4 步链）→ 限流（Guava RateLimiter 令牌桶，按 gatewayId+apiKey 维度）
+- `AuthLicenseService` 鉴权链：鉴权模式 → 查配置 → 检查启用 → 检查过期（null = 永久有效）
+- `AuthRateLimitService`：每小时配额换算为每秒速率；IllegalStateException（无配置）→ 放行，IllegalArgumentException（配置无效）→ 限流
 
-**Auth 限界上下文（domain/auth/）：**
-- `AuthRegisterService`：生成 `gw-` 前缀的 48 位 API Key，落库
-- `AuthLicenseService`：4 步鉴权链 — 网关鉴权模式 → 查询配置 → 检查启用状态 → 检查过期时间（null = 永久有效）
-- `AuthRateLimitService`：Guava Cache + RateLimiter 令牌桶，按 `gatewayId+apiKey` 维度限流，每小时配额换算为每秒速率
-- `AuthStatusEnum`：嵌套枚举 — `GatewayConfig`(NOT_VERIFIED/STRONG_VERIFIED) + `AuthConfig`(DISABLE/ENABLE)
+**Protocol 限界上下文（domain/protocol/）：** Swagger OpenAPI JSON → `HTTPProtocolVO` + `ProtocolMapping` → 落库
+- 策略模式：`AnalysisTypeEnum` 枚举路由，RequestBody 和 Parameters 策略可共存
+- `IProtocolAnalysis`（解析）→ `IProtocolStorage`（落库），`import_gateway_protocol` 端点串联全链路
+
+**Gateway 限界上下文（domain/gateway/）：** 网关和工具配置 CRUD，充血工厂方法，`saveGatewayConfig` upsert（存在则 update 否则 insert）
+
+**Admin 跨域编排（domain/admin/ + case/admin/ + trigger/AdminController）：** 20+ 端点（/admin/），含 CRUD + import/analysis + LLM 测试
+- case/admin：`AdminGatewayService`/`AdminAuthService`/`AdminProtocolService`/`AdminManageService`/`AdminLLMService` 编排转发
+- API 接口在 `mcp-gateway-api` 模块 `IAdminService` 统一定义
+
+**LLM 限界上下文（domain/llm/）：** 内嵌 LLM 能力，动态构建 MCP 客户端连接回自身网关 SSE 端点
+- `LLMService`：ConcurrentHashMap<sseEndpoint, ChatClient> 缓存，`HttpClientSseClientTransport` → `McpSyncClient` → `SyncMcpToolCallbackProvider`
+- `AdminLLMService`（case 层）：拼接 SSE 端点 URL（`contextPath + /gatewayId/mcp/sse?api_key=xxx`），委托 `ILLMService`
+- `POST /admin/test_call_gateway`：管理员发消息 → LLM 通过网关调 MCP 工具 → 返回结果，走完全链路
 
 ## 表结构关系
 
@@ -115,3 +131,10 @@ Client POST /{gatewayId}/mcp/sse?sessionId=xxx
 - **api_key 传播机制**：`createSession()` 将 api_key 拼入 endpoint 事件的 URL，客户端 POST 回调时自动携带，这是限流能工作的关键
 - **鉴权与限流分离**：鉴权在 SSE 连接时（VerifyNode 调 AuthLicenseService），限流在消息处理时（MessageRootNode 仅对 TOOLS_CALL 调 AuthRateLimitService）
 - **AuthRateLimitService 异常策略**：IllegalStateException（无配置）→ 放行，IllegalArgumentException（配置无效）→ 限流
+- **Gateway save upsert**：`saveGatewayConfig` 先查 `queryByGatewayId`，存在则 `updateById`，不存在则 `insert`——编辑弹窗复用 save 端点
+- **case 层不依赖 infrastructure**：case 只调 domain Port 接口（如 `IAuthRepository`），不能直接注入 DAO。之前违反此规则（AdminAuthService 直接注 DAO）已修正
+- **Maven scope 覆盖**：app 模块直接声明某依赖为 test scope 会覆盖 domain 传来的 compile scope。若 domain 已有 compile 声明，app 不需要再声明
+- **OpenAI tool schema 要求**：protocol_mapping 的 request 映射必须有根 object 节点包裹（如 `GetEmployeeDetailRequest`），不能直接是裸字段，否则 OpenAI 拒绝
+- **SSE 端点 URL 拼接**：`server.servlet.context-path` 已含前导 `/`（如 `/api-gateway`），拼接路径时不要再额外加 `/`
+- **LLM 默认模型**：application.yml 中 `OPENAI_MODEL` 默认值为 `gpt-5.2`
+- **Docker MySQL 连接**：`docker exec mcp-gateway-mysql mysql -u root -p123456 mcp_gateway`，密码 `123456`

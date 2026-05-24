@@ -19,7 +19,7 @@ CREATE TABLE `mcp_gateway` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='MCP网关配置表';
 
 INSERT INTO `mcp_gateway` (`gateway_id`, `gateway_name`, `gateway_desc`, `version`, `status`, `auth`)
-VALUES ('gateway_001', '员工信息查询网关', '用于查询公司员工信息的MCP网关', '1.0.0', 1, 1);
+VALUES ('gateway_001', '员工信息管理网关', '公司员工信息查询与管理MCP网关，支持员工查询、详情获取和部门列表', '1.0.0', 1, 1);
 
 -- 用户网关权限表
 DROP TABLE IF EXISTS `mcp_gateway_auth`;
@@ -40,7 +40,7 @@ CREATE TABLE `mcp_gateway_auth` (
 INSERT INTO `mcp_gateway_auth` (`gateway_id`, `api_key`, `rate_limit`, `expire_time`, `status`)
 VALUES ('gateway_001', 'RS590LKPOD8877DDLMFKS4', 1000, '2029-01-02 00:00:00', 1);
 
--- 网关工具表（V2：从 mcp_protocol_registry 拆分出的工具描述部分）
+-- 网关工具表
 DROP TABLE IF EXISTS `mcp_gateway_tool`;
 CREATE TABLE `mcp_gateway_tool` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
@@ -60,9 +60,12 @@ CREATE TABLE `mcp_gateway_tool` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='网关工具表';
 
 INSERT INTO `mcp_gateway_tool` (`gateway_id`, `tool_id`, `tool_name`, `tool_type`, `tool_description`, `tool_version`, `protocol_id`, `protocol_type`)
-VALUES ('gateway_001', 1, 'JavaSDKMCPClient_getCompanyEmployee', 'function', '获取公司雇员信息', '1.0.0', 1, 'http');
+VALUES
+  ('gateway_001', 1, 'queryEmployees', 'function', '查询员工列表，支持按城市、部门、关键词筛选', '1.0.0', 1, 'http'),
+  ('gateway_001', 2, 'getEmployeeDetail', 'function', '根据员工ID查询详细信息', '1.0.0', 2, 'http'),
+  ('gateway_001', 3, 'listDepartments', 'function', '查询公司部门列表，可按城市筛选', '1.0.0', 3, 'http');
 
--- HTTP协议配置表（V2：从 mcp_protocol_registry 拆分出的协议部分）
+-- HTTP协议配置表
 DROP TABLE IF EXISTS `mcp_protocol_http`;
 CREATE TABLE `mcp_protocol_http` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
@@ -80,10 +83,11 @@ CREATE TABLE `mcp_protocol_http` (
 
 INSERT INTO `mcp_protocol_http` (`protocol_id`, `http_url`, `http_method`, `http_headers`, `timeout`, `retry_times`, `status`)
 VALUES
-  (1, 'http://localhost:8701/api/v1/mcp/get_company_employee', 'post', '{"Content-Type": "application/json"}', 30000, 0, 1),
-  (2, 'http://localhost:8701/api/v1/mcp/query-by-id', 'get', '{"Content-Type": "application/json"}', 30000, 0, 1);
+  (1, 'http://localhost:8701/api/v1/employee/query', 'post', '{"Content-Type": "application/json"}', 30000, 0, 1),
+  (2, 'http://localhost:8701/api/v1/employee/{id}', 'get', NULL, 30000, 0, 1),
+  (3, 'http://localhost:8701/api/v1/department/list', 'get', NULL, 30000, 0, 1);
 
--- MCP映射配置表（V2：去掉 http_path、http_location，关联到 protocol_id）
+-- MCP映射配置表
 DROP TABLE IF EXISTS `mcp_protocol_mapping`;
 CREATE TABLE `mcp_protocol_mapping` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
@@ -104,10 +108,57 @@ CREATE TABLE `mcp_protocol_mapping` (
   KEY `idx_parent_path` (`parent_path`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='MCP映射配置表';
 
+-- ==================== protocol_id=1: queryEmployees (POST) ====================
+-- request mappings
 INSERT INTO `mcp_protocol_mapping` (`protocol_id`, `mapping_type`, `parent_path`, `field_name`, `mcp_path`, `mcp_type`, `mcp_desc`, `is_required`, `sort_order`)
 VALUES
-  (1, 'request', NULL, 'xxxRequest01', 'xxxRequest01', 'object', NULL, 1, 1),
-  (1, 'request', 'xxxRequest01', 'city', 'xxxRequest01.city', 'string', '城市名称,如果是中文汉字请先转换为汉语拼音,例如北京:beijing', 1, 1),
-  (1, 'request', 'xxxRequest01', 'company', 'xxxRequest01.company', 'object', '公司信息,如果是中文汉字请先转换为汉语拼音,例如北京:jd/alibaba', 1, 2),
-  (1, 'request', 'xxxRequest01.company', 'name', 'xxxRequest01.company.name', 'string', '公司名称', 1, 1),
-  (1, 'request', 'xxxRequest01.company', 'type', 'xxxRequest01.company.type', 'string', '公司类型', 1, 2);
+  (1, 'request', NULL, 'EmployeeQueryRequest', 'EmployeeQueryRequest', 'object', '员工查询请求', 1, 1),
+  (1, 'request', 'EmployeeQueryRequest', 'city', 'EmployeeQueryRequest.city', 'string', '所在城市，如：北京、上海、深圳', 0, 1),
+  (1, 'request', 'EmployeeQueryRequest', 'departmentName', 'EmployeeQueryRequest.departmentName', 'string', '部门名称，如：技术部、产品部、市场部', 0, 2),
+  (1, 'request', 'EmployeeQueryRequest', 'keyword', 'EmployeeQueryRequest.keyword', 'string', '搜索关键词（匹配姓名或职位）', 0, 3);
+-- response mappings
+INSERT INTO `mcp_protocol_mapping` (`protocol_id`, `mapping_type`, `parent_path`, `field_name`, `mcp_path`, `mcp_type`, `mcp_desc`, `is_required`, `sort_order`)
+VALUES
+  (1, 'response', NULL, 'employees', 'employees', 'array', '员工列表', 1, 1),
+  (1, 'response', 'employees', 'id', 'employees.id', 'number', '员工ID', 1, 1),
+  (1, 'response', 'employees', 'name', 'employees.name', 'string', '员工姓名', 1, 2),
+  (1, 'response', 'employees', 'department', 'employees.department', 'string', '部门', 1, 3),
+  (1, 'response', 'employees', 'position', 'employees.position', 'string', '职位', 1, 4),
+  (1, 'response', 'employees', 'salary', 'employees.salary', 'number', '月薪（元）', 1, 5),
+  (1, 'response', 'employees', 'city', 'employees.city', 'string', '所在城市', 1, 6),
+  (1, 'response', 'employees', 'hireDate', 'employees.hireDate', 'string', '入职日期', 1, 7),
+  (1, 'response', 'employees', 'email', 'employees.email', 'string', '邮箱', 1, 8),
+  (1, 'response', NULL, 'total', 'total', 'number', '总数', 1, 2);
+
+-- ==================== protocol_id=2: getEmployeeDetail (GET path) ====================
+-- request mappings（path 参数，用根对象包裹以符合 OpenAI tool schema 要求）
+INSERT INTO `mcp_protocol_mapping` (`protocol_id`, `mapping_type`, `parent_path`, `field_name`, `mcp_path`, `mcp_type`, `mcp_desc`, `is_required`, `sort_order`)
+VALUES
+  (2, 'request', NULL, 'GetEmployeeDetailRequest', 'GetEmployeeDetailRequest', 'object', '查询员工详情请求', 1, 0),
+  (2, 'request', 'GetEmployeeDetailRequest', 'id', 'GetEmployeeDetailRequest.id', 'number', '员工ID', 1, 1);
+-- response mappings
+INSERT INTO `mcp_protocol_mapping` (`protocol_id`, `mapping_type`, `parent_path`, `field_name`, `mcp_path`, `mcp_type`, `mcp_desc`, `is_required`, `sort_order`)
+VALUES
+  (2, 'response', NULL, 'id', 'id', 'number', '员工ID', 1, 1),
+  (2, 'response', NULL, 'name', 'name', 'string', '员工姓名', 1, 2),
+  (2, 'response', NULL, 'department', 'department', 'string', '部门', 1, 3),
+  (2, 'response', NULL, 'position', 'position', 'string', '职位', 1, 4),
+  (2, 'response', NULL, 'salary', 'salary', 'number', '月薪（元）', 1, 5),
+  (2, 'response', NULL, 'city', 'city', 'string', '所在城市', 1, 6),
+  (2, 'response', NULL, 'hireDate', 'hireDate', 'string', '入职日期', 1, 7),
+  (2, 'response', NULL, 'email', 'email', 'string', '邮箱', 1, 8);
+
+-- ==================== protocol_id=3: listDepartments (GET query) ====================
+-- request mappings（用根对象包裹以符合 OpenAI tool schema 要求）
+INSERT INTO `mcp_protocol_mapping` (`protocol_id`, `mapping_type`, `parent_path`, `field_name`, `mcp_path`, `mcp_type`, `mcp_desc`, `is_required`, `sort_order`)
+VALUES
+  (3, 'request', NULL, 'ListDepartmentsRequest', 'ListDepartmentsRequest', 'object', '查询部门列表请求', 1, 0),
+  (3, 'request', 'ListDepartmentsRequest', 'city', 'ListDepartmentsRequest.city', 'string', '城市（可选，按城市统计部门人数）', 0, 1);
+-- response mappings（数组元素）
+INSERT INTO `mcp_protocol_mapping` (`protocol_id`, `mapping_type`, `parent_path`, `field_name`, `mcp_path`, `mcp_type`, `mcp_desc`, `is_required`, `sort_order`)
+VALUES
+  (3, 'response', NULL, '[]', '[]', 'array', '部门列表', 1, 1),
+  (3, 'response', '[]', 'id', '[].id', 'number', '部门ID', 1, 1),
+  (3, 'response', '[]', 'name', '[].name', 'string', '部门名称', 1, 2),
+  (3, 'response', '[]', 'manager', '[].manager', 'string', '部门负责人', 1, 3),
+  (3, 'response', '[]', 'employeeCount', '[].employeeCount', 'number', '员工人数', 1, 4);
