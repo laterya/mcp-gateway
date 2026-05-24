@@ -13,6 +13,8 @@ import java.util.List;
 @Data
 public class HTTPProtocolVO {
 
+    /** 协议ID（可空，存储时若为空则自动生成8位数字ID） */
+    private Long protocolId;
     /** 接口完整 URL（baseUrl + endpoint） */
     private String httpUrl;
     /** HTTP 请求头（JSON 格式，如 {"Content-Type": "application/json"}） */
