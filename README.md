@@ -36,33 +36,42 @@ JDK 21 · Spring Boot 3.5 · Spring AI 1.1.2 · MyBatis · MySQL 8.0 · Project 
 
 ## 快速开始
 
-### 1. 启动基础设施
+**环境要求：** JDK 21、Maven 3.9、Docker
+
+### 本地开发
 
 ```bash
+# 1. 启动 MySQL
 docker compose -f docs/dev-ops/docker-compose-environment.yml up -d
-```
 
-MySQL 8.0 运行在 `13306` 端口，自动初始化数据库和种子数据。
-
-### 2. 启动 demo-server（可选，用于测试）
-
-```bash
+# 2. 启动 demo-server（可选，用于测试网关 HTTP 路由）
+git clone https://github.com/laterya/mcp-gateway-demo-server.git ../mcp-gateway-demo-server
 cd ../mcp-gateway-demo-server && mvn spring-boot:run
-```
 
-独立的员工管理示例服务（端口 8701），提供 Swagger UI 和 OpenAPI JSON。
-
-### 3. 启动网关
-
-```bash
+# 3. 启动网关
 mvn spring-boot:run -pl mcp-gateway-app
 ```
 
-网关启动后：
+网关启动后访问：
+- 管理控制台：`http://localhost:8090/api-gateway/index.html`（`admin` / `password123`）
 - MCP SSE 端点：`http://localhost:8090/api-gateway/{gatewayId}/mcp/sse`
-- 管理控制台：`http://localhost:8090/api-gateway/index.html`（登录 `admin` / `password123`）
 
-### 4. 配置 LLM（可选）
+### Docker 部署
+
+```bash
+docker pull ghcr.io/laterya/mcp-gateway:latest
+
+docker run -d --name mcp-gateway \
+  -p 8090:8090 \
+  -e SPRING_DATASOURCE_URL='jdbc:mysql://YOUR_MYSQL_HOST:3306/mcp_gateway?...' \
+  -e SPRING_DATASOURCE_USERNAME=root \
+  -e SPRING_DATASOURCE_PASSWORD=your-password \
+  ghcr.io/laterya/mcp-gateway:latest
+```
+
+镜像仅含 Gateway 应用，MySQL 需自行提供并通过环境变量指向它。
+
+### 配置 LLM（可选）
 
 设置环境变量启用内嵌 LLM 测试功能：
 
@@ -156,8 +165,10 @@ mcp-gateway/
 ├── mcp-gateway-infrastructure/   # 基础设施 (DAO, Repository, HTTP Client)
 ├── mcp-gateway-trigger/          # HTTP Controller
 ├── mcp-gateway-types/            # 通用类型
-└── docs/
-    └── dev-ops/
-        ├── docker-compose-environment.yml   # Docker MySQL
-        └── mysql/sql/ai_mcp_gateway.sql     # 建表 + 种子数据
+├── Dockerfile                    # 多阶段构建 (Maven → JRE)
+├── docs/
+│   ├── images/                   # 效果截图
+│   └── dev-ops/
+│       ├── docker-compose-environment.yml   # 本地开发 MySQL
+│       └── mysql/sql/ai_mcp_gateway.sql     # 建表 + 种子数据
 ```
