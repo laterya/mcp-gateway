@@ -10,6 +10,7 @@ CREATE TABLE `mcp_gateway` (
   `gateway_desc` varchar(512) DEFAULT NULL COMMENT '网关描述',
   `version` varchar(16) DEFAULT NULL COMMENT '网关版本',
   `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态：0-禁用，1-启用',
+  `auth` tinyint(1) NOT NULL DEFAULT '0' COMMENT '鉴权模式：0-不校验，1-强校验',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
@@ -17,8 +18,8 @@ CREATE TABLE `mcp_gateway` (
   KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='MCP网关配置表';
 
-INSERT INTO `mcp_gateway` (`gateway_id`, `gateway_name`, `gateway_desc`, `version`, `status`)
-VALUES ('gateway_001', '员工信息查询网关', '用于查询公司员工信息的MCP网关', '1.0.0', 1);
+INSERT INTO `mcp_gateway` (`gateway_id`, `gateway_name`, `gateway_desc`, `version`, `status`, `auth`)
+VALUES ('gateway_001', '员工信息查询网关', '用于查询公司员工信息的MCP网关', '1.0.0', 1, 1);
 
 -- 用户网关权限表
 DROP TABLE IF EXISTS `mcp_gateway_auth`;
@@ -32,8 +33,7 @@ CREATE TABLE `mcp_gateway_auth` (
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_user_gateway` (`gateway_id`),
-  KEY `idx_gateway_id` (`gateway_id`),
+  UNIQUE KEY `uk_user_gateway` (`gateway_id`, `api_key`),
   KEY `idx_api_key` (`api_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户网关权限表';
 

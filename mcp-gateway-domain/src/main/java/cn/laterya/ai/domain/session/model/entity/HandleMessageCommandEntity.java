@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 /**
  * 消息处理命令实体
  *
- * <p>封装 handleMessage 接口的入参（gatewayId、sessionId、messageBody），
+ * <p>封装 handleMessage 接口的入参（gatewayId、apiKey、sessionId、messageBody），
  * 便捷构造器内聚 JSON-RPC 反序列化，避免调用方重复处理。
  */
 @Data
@@ -19,11 +19,19 @@ import lombok.NoArgsConstructor;
 public class HandleMessageCommandEntity {
 
     private String gatewayId;
+    private String apiKey;
     private String sessionId;
     private McpSchemaVO.JSONRPCMessage jsonrpcMessage;
 
     public HandleMessageCommandEntity(String gatewayId, String sessionId, String messageBody) {
         this.gatewayId = gatewayId;
+        this.sessionId = sessionId;
+        this.jsonrpcMessage = McpSchemaVO.deserializeJsonRpcMessage(messageBody);
+    }
+
+    public HandleMessageCommandEntity(String gatewayId, String apiKey, String sessionId, String messageBody) {
+        this.gatewayId = gatewayId;
+        this.apiKey = apiKey;
         this.sessionId = sessionId;
         this.jsonrpcMessage = McpSchemaVO.deserializeJsonRpcMessage(messageBody);
     }

@@ -27,7 +27,7 @@ public class CreateSessionNode extends AbstractSessionChainNode {
     protected Flux<ServerSentEvent<String>> doHandle(String gatewayId, SessionChainContext context) {
         log.info("创建会话 gatewayId:{}", gatewayId);
 
-        SessionConfigVO sessionConfigVO = sessionManagementService.createSession(gatewayId);
+        SessionConfigVO sessionConfigVO = sessionManagementService.createSession(gatewayId, context.getApiKey());
         context.setSessionConfigVO(sessionConfigVO);
 
         return fireNext(gatewayId, context);

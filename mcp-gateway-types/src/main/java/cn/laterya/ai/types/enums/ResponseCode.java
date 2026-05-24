@@ -11,6 +11,7 @@ public enum ResponseCode {
     UN_ERROR("0001", "未知失败"),
     ILLEGAL_PARAMETER("0002", "非法参数"),
     METHOD_NOT_FOUND("0003", "方法未找到"),
+    ENUM_NOT_FOUND("0004", "枚举未找到"),
     ;
 
     private final String code;

@@ -19,6 +19,7 @@ public class McpGatewayPO {
     private String gatewayDesc;
     private String version;
     private Integer status;
+    private Integer auth;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 

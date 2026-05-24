@@ -36,6 +36,16 @@
         SELECT * FROM mcp_gateway_auth WHERE gateway_id = #{gatewayId}
     </select>
 
+    <select id="queryByGatewayIdAndApiKey" resultMap="mcpGatewayAuthMap">
+        SELECT * FROM mcp_gateway_auth
+        WHERE gateway_id = #{gatewayId} AND api_key = #{apiKey} AND status = 1
+        LIMIT 1
+    </select>
+
+    <select id="queryEffectiveGatewayAuthCount" resultType="int">
+        SELECT COUNT(*) FROM mcp_gateway_auth WHERE gateway_id = #{gatewayId} AND status = 1
+    </select>
+
     <select id="queryAll" resultMap="mcpGatewayAuthMap">
         SELECT * FROM mcp_gateway_auth
     </select>

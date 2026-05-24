@@ -18,19 +18,21 @@ public interface IMcpGatewayService {
     /**
      * 建立 SSE 连接，创建 MCP 会话
      *
-     * @param gatewayId 网关唯一标识（如 test10001）
+     * @param gatewayId 网关唯一标识
+     * @param apiKey    API 密钥（可为空）
      * @return SSE 流式响应
      */
-    Flux<ServerSentEvent<String>> establishSSEConnection(String gatewayId);
+    Flux<ServerSentEvent<String>> establishSSEConnection(String gatewayId, String apiKey);
 
     /**
      * 处理 MCP 消息请求
      *
      * @param gatewayId   网关唯一标识
      * @param sessionId   会话 ID
+     * @param apiKey      API 密钥（可为空）
      * @param messageBody JSON-RPC 请求体
      * @return 响应结果
      */
-    Mono<ResponseEntity<Void>> handleMessage(String gatewayId, String sessionId, String messageBody);
+    Mono<ResponseEntity<Void>> handleMessage(String gatewayId, String sessionId, String apiKey, String messageBody);
 
 }

@@ -63,8 +63,10 @@ public class McpSessionService implements IMcpSessionService {
     }
 
     @Override
-    public Flux<ServerSentEvent<String>> createMcpSession(String gatewayId) {
-        return chain.handle(gatewayId, new SessionChainContext());
+    public Flux<ServerSentEvent<String>> createMcpSession(String gatewayId, String apiKey) {
+        SessionChainContext context = new SessionChainContext();
+        context.setApiKey(apiKey);
+        return chain.handle(gatewayId, context);
     }
 
 }

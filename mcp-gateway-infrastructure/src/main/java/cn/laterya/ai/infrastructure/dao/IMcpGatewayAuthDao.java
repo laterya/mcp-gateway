@@ -18,6 +18,10 @@ public interface IMcpGatewayAuthDao {
 
     McpGatewayAuthPO queryByGatewayId(String gatewayId);
 
+    McpGatewayAuthPO queryByGatewayIdAndApiKey(McpGatewayAuthPO req);
+
+    int queryEffectiveGatewayAuthCount(String gatewayId);
+
     List<McpGatewayAuthPO> queryAll();
 
 }

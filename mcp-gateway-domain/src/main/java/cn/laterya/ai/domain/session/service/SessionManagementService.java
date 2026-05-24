@@ -61,7 +61,7 @@ public class SessionManagementService implements ISessionManagementService {
      * 客户端收到后，后续 POST 请求发往此地址。
      */
     @Override
-    public SessionConfigVO createSession(String gatewayId) {
+    public SessionConfigVO createSession(String gatewayId, String apiKey) {
         log.info("创建会话 gatewayId:{}", gatewayId);
 
         String sessionId = UUID.randomUUID().toString();
@@ -70,7 +70,11 @@ public class SessionManagementService implements ISessionManagementService {
         Sinks.Many<ServerSentEvent<String>> sink = Sinks.many().multicast().onBackpressureBuffer();
 
         // 推送 endpoint 事件——这是 SSE 协议的第一条消息，告知客户端消息请求地址
+        // api_key 拼入 URL，客户端 POST 回调时自动携带，用于后续限流校验
         String messageEndpoint = "/api-gateway/" + gatewayId + "/mcp/sse?sessionId=" + sessionId;
+        if (apiKey != null && !apiKey.isEmpty()) {
+            messageEndpoint += "&api_key=" + apiKey;
+        }
         sink.tryEmitNext(ServerSentEvent.<String>builder()
                 .event("endpoint")
                 .data(messageEndpoint)

@@ -112,7 +112,7 @@ public class ApiTest {
     public McpSyncClient sseMcpClient() {
         HttpClientSseClientTransport transport = HttpClientSseClientTransport
                 .builder("http://127.0.0.1:8090")
-                .sseEndpoint("/api-gateway/gateway_001/mcp/sse")
+                .sseEndpoint("/api-gateway/gateway_001/mcp/sse?api_key=RS590LKPOD8877DDLMFKS4")
                 .build();
 
         McpSyncClient mcpSyncClient = McpClient.sync(transport)

@@ -15,8 +15,9 @@ public interface IMcpSessionService {
      * 创建 MCP 会话并返回 SSE 流
      *
      * @param gatewayId 网关标识
+     * @param apiKey    API 密钥（可为空，取决于网关鉴权模式）
      * @return SSE 流式响应
      */
-    Flux<ServerSentEvent<String>> createMcpSession(String gatewayId);
+    Flux<ServerSentEvent<String>> createMcpSession(String gatewayId, String apiKey);
 
 }

@@ -10,7 +10,16 @@ import cn.laterya.ai.domain.session.model.SessionConfigVO;
  */
 public class SessionChainContext {
 
+    private String apiKey;
     private SessionConfigVO sessionConfigVO;
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
 
     public SessionConfigVO getSessionConfigVO() {
         return sessionConfigVO;

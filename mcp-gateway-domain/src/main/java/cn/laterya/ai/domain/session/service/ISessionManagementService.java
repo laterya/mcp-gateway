@@ -15,10 +15,11 @@ public interface ISessionManagementService {
     /**
      * 创建会话：生成 sessionId + 初始化 Sink + 推送 endpoint 事件告知客户端消息地址
      *
-     * @param gatewayId 网关标识，用于拼接消息端点 URL：/{gatewayId}/mcp/message?sessionId={sessionId}
+     * @param gatewayId 网关标识，用于拼接消息端点 URL
+     * @param apiKey    API 密钥，拼入 endpoint URL 以便客户端 POST 回调时自动携带
      * @return 包含 Sink 的会话配置对象，调用方可通过 sink.asFlux() 转为 SSE 响应流
      */
-    SessionConfigVO createSession(String gatewayId);
+    SessionConfigVO createSession(String gatewayId, String apiKey);
 
     /** 移除会话：从活跃表删除 + 标记 inactive + 关闭 Sink 流 */
     void removeSession(String sessionId);

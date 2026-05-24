@@ -27,8 +27,8 @@ import reactor.core.publisher.Mono;
  *
  * <p>SSE 双通道设计：
  * <ul>
- *   <li>GET /{gatewayId}/mcp/sse → 建立 SSE 流（服务端推送通道）</li>
- *   <li>POST /{gatewayId}/mcp/sse?sessionId=xxx → 客户端发送消息（请求通道）</li>
+ *   <li>GET /{gatewayId}/mcp/sse?api_key=xxx → 建立 SSE 流（服务端推送通道）</li>
+ *   <li>POST /{gatewayId}/mcp/sse?sessionId=xxx&api_key=xxx → 客户端发送消息（请求通道）</li>
  * </ul>
  * 客户端 POST 的响应不是通过 HTTP 返回，而是通过同一个 SSE Sink 推送回去。
  */
@@ -47,16 +47,17 @@ public class McpGatewayController implements IMcpGatewayService {
 
     @Override
     @GetMapping(value = "{gatewayId}/mcp/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<String>> establishSSEConnection(@PathVariable("gatewayId") String gatewayId) {
+    public Flux<ServerSentEvent<String>> establishSSEConnection(@PathVariable("gatewayId") String gatewayId,
+                                                                  @RequestParam(value = "api_key", required = false) String apiKey) {
         try {
-            log.info("建立 MCP SSE 连接 gatewayId:{}", gatewayId);
+            log.info("建立 MCP SSE 连接 gatewayId:{} apiKey:{}", gatewayId, apiKey);
 
             if (!StringUtils.hasText(gatewayId)) {
                 log.info("非法参数，gatewayId 为空");
                 throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
             }
 
-            return mcpSessionService.createMcpSession(gatewayId);
+            return mcpSessionService.createMcpSession(gatewayId, apiKey);
         } catch (Exception e) {
             log.error("建立 MCP SSE 连接失败 gatewayId:{}", gatewayId, e);
             throw e;
@@ -67,11 +68,12 @@ public class McpGatewayController implements IMcpGatewayService {
     @PostMapping(value = "{gatewayId}/mcp/sse", consumes = MediaType.APPLICATION_JSON_VALUE)
     public Mono<ResponseEntity<Void>> handleMessage(@PathVariable("gatewayId") String gatewayId,
                                                      @RequestParam String sessionId,
+                                                     @RequestParam(value = "api_key", required = false) String apiKey,
                                                      @RequestBody String messageBody) {
         try {
-            log.info("处理 MCP SSE 消息 gatewayId:{} sessionId:{} messageBody:{}", gatewayId, sessionId, messageBody);
+            log.info("处理 MCP SSE 消息 gatewayId:{} apiKey:{} sessionId:{} messageBody:{}", gatewayId, apiKey, sessionId, messageBody);
 
-            HandleMessageCommandEntity commandEntity = new HandleMessageCommandEntity(gatewayId, sessionId, messageBody);
+            HandleMessageCommandEntity commandEntity = new HandleMessageCommandEntity(gatewayId, apiKey, sessionId, messageBody);
             ResponseEntity<Void> responseEntity = mcpMessageService.handleMessage(commandEntity);
             return Mono.just(responseEntity);
         } catch (Exception e) {

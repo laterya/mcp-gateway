@@ -12,4 +12,9 @@ public class AppException extends RuntimeException {
         this.code = code;
     }
 
+    public AppException(int code, String message) {
+        super(message);
+        this.code = String.valueOf(code);
+    }
+
 }

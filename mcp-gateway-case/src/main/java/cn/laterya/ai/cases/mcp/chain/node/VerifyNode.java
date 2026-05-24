@@ -2,25 +2,36 @@ package cn.laterya.ai.cases.mcp.chain.node;
 
 import cn.laterya.ai.cases.mcp.chain.AbstractSessionChainNode;
 import cn.laterya.ai.cases.mcp.chain.SessionChainContext;
+import cn.laterya.ai.domain.auth.model.entity.LicenseCommandEntity;
+import cn.laterya.ai.domain.auth.service.IAuthLicenseService;
+import cn.laterya.ai.types.enums.McpErrorCodes;
+import cn.laterya.ai.types.exception.AppException;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 /**
- * 验证节点 —— 校验请求参数和权限
- *
- * <p>当前为占位实现（直接放行），后续课程会补充 api_key 验证等逻辑。
- * 放行后继续执行下一个节点。
+ * 鉴权节点 —— 校验 api_key 是否有效
  */
 @Slf4j
 @Component
 public class VerifyNode extends AbstractSessionChainNode {
 
+    @Resource
+    private IAuthLicenseService authLicenseService;
+
     @Override
     protected Flux<ServerSentEvent<String>> doHandle(String gatewayId, SessionChainContext context) {
-        log.info("验证请求 gatewayId:{}", gatewayId);
-        // todo: 后续补充 api_key 等验证逻辑
+        log.info("鉴权校验 gatewayId:{}", gatewayId);
+
+        boolean isValid = authLicenseService.checkLicense(new LicenseCommandEntity(gatewayId, context.getApiKey()));
+        if (!isValid) {
+            log.warn("鉴权失败 gatewayId:{} apiKey:{}", gatewayId, context.getApiKey());
+            throw new AppException(McpErrorCodes.INSUFFICIENT_PERMISSIONS, "fail to auth apikey");
+        }
+
         return fireNext(gatewayId, context);
     }
 

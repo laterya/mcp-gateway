@@ -24,6 +24,9 @@ public final class McpErrorCodes {
     public static final int SERVER_SHUTTING_DOWN = -32002;
     public static final int TOOL_NOT_FOUND = -32003;
     public static final int TOOL_EXECUTION_FAILED = -32004;
+    public static final int RESOURCE_NOT_FOUND = -32005;
+    public static final int INSUFFICIENT_PERMISSIONS = -32006;
+    public static final int UNSUPPORTED_PROTOCOL_VERSION = -32007;
 
     private McpErrorCodes() {
     }
