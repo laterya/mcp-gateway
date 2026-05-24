@@ -13,9 +13,10 @@ public interface IRequestHandler {
     /**
      * 处理 JSON-RPC 请求
      *
-     * @param message 请求消息
+     * @param gatewayId 网关标识
+     * @param message   请求消息
      * @return 响应消息
      */
-    McpSchemaVO.JSONRPCResponse handle(McpSchemaVO.JSONRPCRequest message);
+    McpSchemaVO.JSONRPCResponse handle(String gatewayId, McpSchemaVO.JSONRPCRequest message);
 
 }

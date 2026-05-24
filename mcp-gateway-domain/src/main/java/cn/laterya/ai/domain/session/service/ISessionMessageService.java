@@ -13,9 +13,10 @@ public interface ISessionMessageService {
     /**
      * 处理会话消息
      *
-     * @param message JSON-RPC 消息（Request / Notification / Response）
+     * @param gatewayId 网关标识
+     * @param message   JSON-RPC 消息（Request / Notification / Response）
      * @return JSON-RPC 响应，Notification/Response 返回 null
      */
-    McpSchemaVO.JSONRPCResponse processHandlerMessage(McpSchemaVO.JSONRPCMessage message);
+    McpSchemaVO.JSONRPCResponse processHandlerMessage(String gatewayId, McpSchemaVO.JSONRPCMessage message);
 
 }

@@ -91,7 +91,7 @@ public class McpGatewayController implements IMcpGatewayService {
             McpSchemaVO.JSONRPCMessage jsonrpcMessage = McpSchemaVO.deserializeJsonRpcMessage(messageBody);
             log.info("反序列化消息 jsonrpc:{}", jsonrpcMessage.jsonrpc());
 
-            McpSchemaVO.JSONRPCResponse jsonrpcResponse = sessionMessageService.processHandlerMessage(jsonrpcMessage);
+            McpSchemaVO.JSONRPCResponse jsonrpcResponse = sessionMessageService.processHandlerMessage(gatewayId, jsonrpcMessage);
 
             // 处理结果通过 SSE Sink 推回客户端
             if (null != jsonrpcResponse) {

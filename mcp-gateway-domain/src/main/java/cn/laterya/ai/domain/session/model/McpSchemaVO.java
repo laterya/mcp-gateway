@@ -7,6 +7,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * MCP 协议消息结构定义
@@ -19,10 +21,21 @@ import java.util.HashMap;
  */
 public final class McpSchemaVO {
 
+    public static final String JSONRPC_VERSION = "2.0";
+
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private McpSchemaVO() {
     }
+
+    /**
+     * 将 params（Object）反序列化为指定的 record 类型
+     */
+    public static <T> T unmarshalFrom(Object data, TypeReference<T> typeRef) {
+        return OBJECT_MAPPER.convertValue(data, typeRef);
+    }
+
+    // ==================== JSON-RPC 消息类型 ====================
 
     /**
      * JSON-RPC 2.0 消息类型 sealed 接口
@@ -31,9 +44,7 @@ public final class McpSchemaVO {
      * 在 switch 表达式和 instanceof 模式匹配时编译器能做穷举检查。
      */
     public sealed interface JSONRPCMessage permits JSONRPCRequest, JSONRPCNotification, JSONRPCResponse {
-
         String jsonrpc();
-
     }
 
     /**
@@ -79,7 +90,6 @@ public final class McpSchemaVO {
                 @JsonProperty("data") Object data
         ) {
         }
-
     }
 
     /**
@@ -127,6 +137,148 @@ public final class McpSchemaVO {
         } catch (Exception e) {
             throw new RuntimeException("反序列化 JSON-RPC 消息失败", e);
         }
+    }
+
+    // ==================== MCP Initialize 协议类型 ====================
+
+    /**
+     * 客户端 initialize 请求参数
+     */
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record InitializeRequest(
+            @JsonProperty("protocolVersion") String protocolVersion,
+            @JsonProperty("capabilities") ClientCapabilities capabilities,
+            @JsonProperty("clientInfo") Implementation clientInfo
+    ) {
+    }
+
+    /**
+     * 服务端 initialize 响应结果
+     */
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record InitializeResult(
+            @JsonProperty("protocolVersion") String protocolVersion,
+            @JsonProperty("capabilities") ServerCapabilities capabilities,
+            @JsonProperty("serverInfo") Implementation serverInfo,
+            @JsonProperty("instructions") String instructions
+    ) {
+    }
+
+    /**
+     * 客户端能力声明
+     */
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record ClientCapabilities(
+            @JsonProperty("experimental") Map<String, Object> experimental,
+            @JsonProperty("roots") RootCapabilities roots,
+            @JsonProperty("sampling") Sampling sampling
+    ) {
+        public record RootCapabilities(@JsonProperty("listChanged") Boolean listChanged) {
+        }
+
+        public record Sampling() {
+        }
+    }
+
+    /**
+     * 服务端能力声明
+     */
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record ServerCapabilities(
+            @JsonProperty("completions") CompletionCapabilities completions,
+            @JsonProperty("experimental") Map<String, Object> experimental,
+            @JsonProperty("logging") LoggingCapabilities logging,
+            @JsonProperty("prompts") PromptCapabilities prompts,
+            @JsonProperty("resources") ResourceCapabilities resources,
+            @JsonProperty("tools") ToolCapabilities tools
+    ) {
+        public record CompletionCapabilities() {
+        }
+
+        public record LoggingCapabilities() {
+        }
+
+        public record PromptCapabilities(@JsonProperty("listChanged") Boolean listChanged) {
+        }
+
+        public record ResourceCapabilities(
+                @JsonProperty("subscribe") Boolean subscribe,
+                @JsonProperty("listChanged") Boolean listChanged) {
+        }
+
+        public record ToolCapabilities(@JsonProperty("listChanged") Boolean listChanged) {
+        }
+    }
+
+    // ==================== MCP Tools/List 协议类型 ====================
+
+    /**
+     * MCP 工具定义
+     *
+     * @param name        工具名称，AI 通过此名称调用
+     * @param description 工具描述，AI 用来判断何时调用
+     * @param inputSchema 输入参数的 JSON Schema
+     */
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Tool(
+            @JsonProperty("name") String name,
+            @JsonProperty("description") String description,
+            @JsonProperty("inputSchema") JsonSchema inputSchema
+    ) {
+    }
+
+    /**
+     * JSON Schema 结构（用于描述工具输入参数）
+     *
+     * @param type                 数据类型，通常为 "object"
+     * @param properties           属性定义，key 为字段名，value 为子 schema
+     * @param required             必填字段列表
+     * @param additionalProperties 是否允许额外属性
+     * @param description          描述
+     * @param definitions          共享类型定义
+     */
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record JsonSchema(
+            @JsonProperty("type") String type,
+            @JsonProperty("properties") Map<String, Object> properties,
+            @JsonProperty("required") List<String> required,
+            @JsonProperty("additionalProperties") Boolean additionalProperties,
+            @JsonProperty("description") String description,
+            @JsonProperty("$defs") Map<String, Object> definitions
+    ) {
+    }
+
+    // ==================== MCP Tools/Call 协议类型 ====================
+
+    /**
+     * tools/call 请求参数
+     *
+     * @param name      要调用的工具名称
+     * @param arguments 工具入参，对应 tools/list 中 inputSchema 定义的结构
+     */
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record CallToolRequest(
+            @JsonProperty("name") String name,
+            @JsonProperty("arguments") Map<String, Object> arguments
+    ) {
+    }
+
+    /**
+     * 客户端/服务端实现信息（通用结构）
+     */
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Implementation(
+            @JsonProperty("name") String name,
+            @JsonProperty("version") String version
+    ) {
     }
 
 }
