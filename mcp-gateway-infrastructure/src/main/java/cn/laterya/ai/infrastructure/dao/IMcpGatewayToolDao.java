@@ -22,4 +22,6 @@ public interface IMcpGatewayToolDao {
 
     List<McpGatewayToolPO> queryAll();
 
+    int updateProtocolByGatewayId(McpGatewayToolPO mcpGatewayToolPO);
+
 }

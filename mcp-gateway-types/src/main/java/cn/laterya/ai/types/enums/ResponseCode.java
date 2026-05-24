@@ -12,6 +12,7 @@ public enum ResponseCode {
     ILLEGAL_PARAMETER("0002", "非法参数"),
     METHOD_NOT_FOUND("0003", "方法未找到"),
     ENUM_NOT_FOUND("0004", "枚举未找到"),
+    DB_UPDATE_FAIL("0005", "数据库更新失败"),
     ;
 
     private final String code;

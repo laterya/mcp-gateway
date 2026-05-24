@@ -51,7 +51,7 @@ CREATE TABLE `mcp_gateway_tool` (
   `tool_description` varchar(512) NOT NULL COMMENT '工具描述',
   `tool_version` varchar(16) NOT NULL DEFAULT '1.0.0' COMMENT '工具版本',
   `protocol_id` bigint NOT NULL COMMENT '协议ID',
-  `protocol_type` varchar(16) NOT NULL DEFAULT 'http' COMMENT '协议类型：http、dubbo、rabbitmq',
+  `protocol_type` varchar(8) NOT NULL DEFAULT 'http' COMMENT '协议类型：http、dubbo、rabbitmq',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),

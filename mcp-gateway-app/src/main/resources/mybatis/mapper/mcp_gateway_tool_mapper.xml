@@ -48,4 +48,9 @@
         SELECT * FROM mcp_gateway_tool
     </select>
 
+    <update id="updateProtocolByGatewayId" parameterType="cn.laterya.ai.infrastructure.dao.po.McpGatewayToolPO">
+        UPDATE mcp_gateway_tool SET protocol_id = #{protocolId}, protocol_type = #{protocolType}
+        WHERE gateway_id = #{gatewayId}
+    </update>
+
 </mapper>

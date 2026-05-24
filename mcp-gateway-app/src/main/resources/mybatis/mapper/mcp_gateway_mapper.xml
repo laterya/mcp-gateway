@@ -15,8 +15,8 @@
     </resultMap>
 
     <insert id="insert" parameterType="cn.laterya.ai.infrastructure.dao.po.McpGatewayPO" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO mcp_gateway (gateway_id, gateway_name, gateway_desc, version, status)
-        VALUES (#{gatewayId}, #{gatewayName}, #{gatewayDesc}, #{version}, #{status})
+        INSERT INTO mcp_gateway (gateway_id, gateway_name, gateway_desc, version, status, auth)
+        VALUES (#{gatewayId}, #{gatewayName}, #{gatewayDesc}, #{version}, #{status}, #{auth})
     </insert>
 
     <delete id="deleteById">
@@ -40,5 +40,9 @@
     <select id="queryAll" resultMap="mcpGatewayMap">
         SELECT * FROM mcp_gateway
     </select>
+
+    <update id="updateAuthStatusByGatewayId" parameterType="cn.laterya.ai.infrastructure.dao.po.McpGatewayPO">
+        UPDATE mcp_gateway SET auth = #{auth} WHERE gateway_id = #{gatewayId}
+    </update>
 
 </mapper>
