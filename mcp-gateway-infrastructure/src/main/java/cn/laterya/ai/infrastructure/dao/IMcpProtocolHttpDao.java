@@ -20,4 +20,6 @@ public interface IMcpProtocolHttpDao {
 
     List<McpProtocolHttpPO> queryAll();
 
+    int deleteByProtocolId(Long protocolId);
+
 }

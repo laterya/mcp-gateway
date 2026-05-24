@@ -46,4 +46,8 @@
         SELECT * FROM mcp_protocol_mapping
     </select>
 
+    <delete id="deleteByProtocolId">
+        DELETE FROM mcp_protocol_mapping WHERE protocol_id = #{protocolId}
+    </delete>
+
 </mapper>

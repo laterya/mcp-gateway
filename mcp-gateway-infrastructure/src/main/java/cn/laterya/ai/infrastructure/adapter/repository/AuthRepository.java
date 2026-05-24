@@ -12,59 +12,43 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-/**
- * 鉴权仓储服务 —— 实现 domain 层 IAuthRepository 端口，完成 PO↔VO 转换
- */
+import java.time.LocalDateTime;
+
 @Slf4j
 @Repository
 public class AuthRepository implements IAuthRepository {
 
-    @Resource
-    private IMcpGatewayAuthDao mcpGatewayAuthDao;
-
-    @Resource
-    private IMcpGatewayDao mcpGatewayDao;
+    @Resource private IMcpGatewayAuthDao mcpGatewayAuthDao;
+    @Resource private IMcpGatewayDao mcpGatewayDao;
 
     @Override
-    public int queryEffectiveGatewayAuthCount(String gatewayId) {
-        return mcpGatewayAuthDao.queryEffectiveGatewayAuthCount(gatewayId);
-    }
+    public int queryEffectiveGatewayAuthCount(String gatewayId) { return mcpGatewayAuthDao.queryEffectiveGatewayAuthCount(gatewayId); }
 
     @Override
-    public McpGatewayAuthVO queryEffectiveGatewayAuthInfo(LicenseCommandEntity commandEntity) {
-        McpGatewayAuthPO poReq = new McpGatewayAuthPO();
-        poReq.setGatewayId(commandEntity.getGatewayId());
-        poReq.setApiKey(commandEntity.getApiKey());
-
+    public McpGatewayAuthVO queryEffectiveGatewayAuthInfo(LicenseCommandEntity cmd) {
+        McpGatewayAuthPO poReq = new McpGatewayAuthPO(); poReq.setGatewayId(cmd.getGatewayId()); poReq.setApiKey(cmd.getApiKey());
         McpGatewayAuthPO po = mcpGatewayAuthDao.queryByGatewayIdAndApiKey(poReq);
-        if (null == po) return null;
-
-        return McpGatewayAuthVO.builder()
-                .gatewayId(po.getGatewayId())
-                .apiKey(po.getApiKey())
-                .rateLimit(po.getRateLimit())
-                .expireTime(po.getExpireTime())
-                .status(AuthStatusEnum.AuthConfig.get(po.getStatus()))
-                .build();
+        if (po == null) return null;
+        return McpGatewayAuthVO.builder().gatewayId(po.getGatewayId()).apiKey(po.getApiKey()).rateLimit(po.getRateLimit()).expireTime(po.getExpireTime()).status(AuthStatusEnum.AuthConfig.get(po.getStatus())).build();
     }
 
     @Override
-    public void insert(McpGatewayAuthVO mcpGatewayAuthVO) {
-        McpGatewayAuthPO po = McpGatewayAuthPO.builder()
-                .gatewayId(mcpGatewayAuthVO.getGatewayId())
-                .apiKey(mcpGatewayAuthVO.getApiKey())
-                .rateLimit(mcpGatewayAuthVO.getRateLimit())
-                .expireTime(mcpGatewayAuthVO.getExpireTime())
-                .status(mcpGatewayAuthVO.getStatus().getCode())
-                .build();
-        mcpGatewayAuthDao.insert(po);
+    public void insert(McpGatewayAuthVO vo) {
+        mcpGatewayAuthDao.insert(McpGatewayAuthPO.builder().gatewayId(vo.getGatewayId()).apiKey(vo.getApiKey()).rateLimit(vo.getRateLimit()).expireTime(vo.getExpireTime()).status(vo.getStatus().getCode()).build());
     }
 
     @Override
     public AuthStatusEnum.GatewayConfig queryGatewayAuthStatus(String gatewayId) {
-        // 鉴权模式配置在 mcp_gateway 表的 auth 字段，而非 mcp_gateway_auth 表
-        McpGatewayPO mcpGatewayPO = mcpGatewayDao.queryByGatewayId(gatewayId);
-        return AuthStatusEnum.GatewayConfig.get(mcpGatewayPO.getAuth());
+        return AuthStatusEnum.GatewayConfig.get(mcpGatewayDao.queryByGatewayId(gatewayId).getAuth());
     }
 
+    @Override
+    public void updateAuth(String gatewayId, Integer rateLimit, LocalDateTime expireTime) {
+        McpGatewayAuthPO existing = mcpGatewayAuthDao.queryByGatewayId(gatewayId);
+        if (existing == null) { log.warn("鉴权记录不存在 gatewayId:{}", gatewayId); return; }
+        existing.setRateLimit(rateLimit);
+        if (expireTime != null) existing.setExpireTime(expireTime);
+        mcpGatewayAuthDao.updateById(existing);
+        log.info("更新鉴权 gatewayId:{} rateLimit:{}", gatewayId, rateLimit);
+    }
 }

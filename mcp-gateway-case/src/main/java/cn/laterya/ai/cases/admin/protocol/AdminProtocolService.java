@@ -19,4 +19,9 @@ public class AdminProtocolService implements IAdminProtocolService {
         protocolStorage.doStorage(commandEntity);
     }
 
+    @Override
+    public void deleteGatewayProtocol(Long protocolId) {
+        log.info("删除协议 protocolId:{}", protocolId);
+        protocolStorage.deleteByProtocolId(protocolId);
+    }
 }

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Gateway · 管理控制台</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0c0c10;--srf:#15151b;--elv:#1c1c25;--hvr:#22222d;--brd:rgba(255,255,255,0.06);--brd2:rgba(255,255,255,0.1);--txt:#e8e8ed;--tx2:#9898a8;--tx3:#686878;--ac:#5eead4;--acd:rgba(94,234,212,0.12);--acg:rgba(94,234,212,0.25);--su:#34d399;--wa:#fbbf24;--er:#f87171;--in:#60a5fa;--r:6px;--r2:10px;--r3:14px;--u:'DM Sans',-apple-system,sans-serif;--m:'JetBrains Mono','SF Mono',monospace;--t:180ms cubic-bezier(.4,0,.2,1);--ts:350ms cubic-bezier(.4,0,.2,1)}
+*{margin:0;padding:0;box-sizing:border-box}html,body{height:100%}
+body{font-family:var(--u);background:var(--bg);color:var(--txt);display:flex;overflow:hidden;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:20px 20px}
+.sb{width:220px;min-width:220px;background:var(--srf);border-right:1px solid var(--brd);display:flex;flex-direction:column;z-index:10;padding:24px 0;transition:width var(--t)}
+.sb-logo{padding:0 20px 20px;border-bottom:1px solid var(--brd);margin-bottom:8px}
+.sb-logo .br{font-family:var(--m);font-size:13px;font-weight:600;letter-spacing:-0.5px}
+.sb-logo .br span{color:var(--ac)}.sb-logo .sub{font-size:10px;color:var(--tx3);font-family:var(--m);margin-top:2px}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 20px;margin:1px 8px;border-radius:var(--r);font-size:13px;font-weight:500;color:var(--tx2);cursor:pointer;transition:all var(--t);border:1px solid transparent;user-select:none}
+.ni:hover{color:var(--txt);background:var(--hvr)}.ni.act{color:var(--ac);background:var(--acd);border-color:rgba(94,234,212,0.15)}
+.ni .ico{font-size:16px;width:20px;text-align:center}.nd{margin:8px 20px;border-top:1px solid var(--brd);position:relative}
+.nd span{position:absolute;top:-9px;left:0;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:1px;background:var(--srf);padding-right:8px}
+.mn{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:1}
+.tb{height:52px;min-height:52px;background:var(--srf);border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.tb .st{display:flex;align-items:center;gap:8px;font-size:11px;font-family:var(--m);color:var(--tx3)}.tb .st .dot{width:6px;height:6px;border-radius:50%;background:var(--su);box-shadow:0 0 6px rgba(52,211,153,0.5)}
+.ct{flex:1;overflow-y:auto;padding:24px;scroll-behavior:smooth}.ct::-webkit-scrollbar{width:4px}.ct::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:2px}
+.sec{display:none}.sec.act{display:block;animation:fdi var(--ts) ease}@keyframes fdi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.sr{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.sc{background:var(--srf);border:1px solid var(--brd);border-radius:var(--r2);padding:18px 20px;transition:border-color var(--t)}.sc:hover{border-color:var(--brd2)}
+.sc .sl{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:6px}
+.sc .sv{font-family:var(--m);font-size:28px;font-weight:600;color:var(--txt)}
+.tw{background:var(--srf);border:1px solid var(--brd);border-radius:var(--r3);overflow:hidden;margin-bottom:16px}
+.thd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--brd);gap:8px;flex-wrap:wrap}
+.thd h2{font-size:14px;font-weight:600}.tha{display:flex;gap:8px;align-items:center}
+.bt{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r);font-size:12px;font-weight:600;font-family:var(--u);cursor:pointer;border:1px solid var(--brd2);background:transparent;color:var(--tx2);transition:all var(--t)}
+.bt:hover{background:var(--hvr);color:var(--txt)}.bt-pr{background:var(--ac);color:#000;border-color:var(--ac)}
+.bt-pr:hover{background:#6fe8da;color:#000;box-shadow:0 0 16px var(--acg)}.bt-er{color:var(--er);border-color:rgba(248,113,113,0.3)}
+.bt-er:hover{background:rgba(248,113,113,0.1)}.bt-sm{padding:5px 10px;font-size:11px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:11px 20px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--tx3);border-bottom:1px solid var(--brd);background:rgba(0,0,0,0.2)}
+td{padding:12px 20px;font-size:13px;border-bottom:1px solid var(--brd)}tr{transition:background var(--t)}tr:hover{background:var(--hvr)}tr:last-child td{border-bottom:none}
+.bad{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.bad-on{background:rgba(52,211,153,0.12);color:var(--su);border:1px solid rgba(52,211,153,0.2)}
+.bad-off{background:rgba(152,152,168,0.1);color:var(--tx2);border:1px solid rgba(152,152,168,0.15)}
+.bad-str{background:rgba(96,165,250,0.12);color:var(--in);border:1px solid rgba(96,165,250,0.2)}
+.bad-no{background:rgba(251,191,36,0.1);color:var(--wa);border:1px solid rgba(251,191,36,0.18)}
+.bad-d{width:5px;height:5px;border-radius:50%;display:inline-block}.bad-d.on{background:var(--su);box-shadow:0 0 4px var(--su)}.bad-d.off{background:var(--tx3)}
+.co{font-family:var(--m);font-size:12px;color:var(--ac)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:16px}.fg.fl{grid-template-columns:1fr}
+.fc{background:var(--srf);border:1px solid var(--brd);border-radius:var(--r3);padding:24px;margin-bottom:16px}
+.fc h2{font-size:14px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.tag{font-size:10px;padding:2px 8px;border-radius:3px;font-family:var(--m);font-weight:500;text-transform:uppercase}
+.tp{background:rgba(52,211,153,0.1);color:var(--su);border:1px solid rgba(52,211,153,0.2)}
+.tg{background:rgba(96,165,250,0.1);color:var(--in);border:1px solid rgba(96,165,250,0.2)}
+.fgi{margin-bottom:16px}.fgi:last-child{margin-bottom:0}
+.fgi label{display:block;font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:6px}
+.fgi label .req{color:var(--er);margin-left:2px}.fgi .hint{font-size:10px;color:var(--tx3);margin-top:4px}
+input,textarea,select{width:100%;padding:10px 14px;background:var(--elv);border:1px solid var(--brd2);border-radius:var(--r);color:var(--txt);font-size:13px;font-family:var(--u);transition:all var(--t);resize:vertical}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--acd)}
+input::placeholder,textarea::placeholder{color:var(--tx3)}input.mono,textarea.mono{font-family:var(--m);font-size:12px}
+textarea{min-height:100px}select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898a8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.fa{margin-top:24px;display:flex;gap:12px;align-items:center}.fa .bt{padding:10px 20px;font-size:13px}
+.pg{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px 0}
+.pg .bt{min-width:60px;justify-content:center}.pg .pg-info{font-size:12px;color:var(--tx2);font-family:var(--m)}
+.toast-ct{position:fixed;top:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:var(--r2);font-size:13px;font-weight:500;animation:ti 300ms ease;max-width:400px;border:1px solid}
+.toast.ok{background:rgba(52,211,153,0.1);color:var(--su);border-color:rgba(52,211,153,0.2)}.toast.er{background:rgba(248,113,113,0.1);color:var(--er);border-color:rgba(248,113,113,0.2)}
+@keyframes ti{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.ld,.em{text-align:center;padding:40px!important;color:var(--tx3)}
+.sp{display:inline-block;width:20px;height:20px;border:2px solid var(--brd2);border-top-color:var(--ac);border-radius:50%;animation:spin 0.6s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex;animation:fdi 200ms ease}
+.modal{background:var(--srf);border:1px solid var(--brd2);border-radius:var(--r3);padding:28px;width:520px;max-height:80vh;overflow-y:auto}
+.modal h2{font-size:16px;font-weight:600;margin-bottom:20px;font-family:var(--m)}
+.modal .fg{margin-bottom:0}
+@media(max-width:768px){.sb{width:60px;min-width:60px}.sb-logo .br,.sb-logo .sub,.ni span:not(.ico){display:none}.ni{justify-content:center;padding:10px}.sr{grid-template-columns:repeat(2,1fr)}.fg{grid-template-columns:1fr}.modal{width:90%}}
+</style>
+</head>
+<body>
+<div class="sb">
+  <div class="sb-logo"><div class="br">MCP<span>Gateway</span></div><div class="sub">管理控制台</div></div>
+  <div class="ni act" data-sec="gateway-list"><span class="ico">☰</span><span>网关列表</span></div>
+  <div class="nd"><span>查询</span></div>
+  <div class="ni" data-sec="tool-list"><span class="ico">⚙</span><span>工具列表</span></div>
+  <div class="ni" data-sec="auth-list"><span class="ico">🔑</span><span>鉴权列表</span></div>
+  <div class="ni" data-sec="protocol-list"><span class="ico">⎔</span><span>协议列表</span></div>
+  <div class="nd"><span>配置</span></div>
+  <div class="ni" data-sec="gateway-create"><span class="ico">+</span><span>新增网关</span></div>
+  <div class="ni" data-sec="tool-create"><span class="ico">+⚙</span><span>新增工具</span></div>
+  <div class="ni" data-sec="auth-create"><span class="ico">+🔑</span><span>新增鉴权</span></div>
+  <div class="ni" data-sec="protocol-create"><span class="ico">+⎔</span><span>新增协议</span></div>
+</div>
+<div class="mn">
+  <div class="tb"><div class="st"><span class="dot"></span>localhost:8090/api-gateway/admin</div></div>
+  <div class="ct" id="ct">
+    <!-- ====== 网关列表 ====== -->
+    <div class="sec act" id="sec-gateway-list">
+      <div class="sr" id="sr"></div>
+      <div class="tw">
+        <div class="thd"><h2>所有网关</h2><div class="tha"><button class="bt bt-sm" onclick="loadGatewayList()">刷新</button></div></div>
+        <table><thead><tr><th>Gateway ID</th><th>名称</th><th>描述</th><th>版本</th><th>鉴权</th><th>校验</th><th>操作</th></tr></thead><tbody id="gw-tb"><tr><td colspan="7" class="ld"><span class="sp"></span>加载中...</td></tr></tbody></table>
+        <div class="pg" id="gw-pg"></div>
+      </div>
+    </div>
+    <!-- ====== 工具列表 ====== -->
+    <div class="sec" id="sec-tool-list">
+      <div class="tw">
+        <div class="thd"><h2>所有工具</h2><div class="tha"><select id="tl-gw" style="width:180px;padding:6px 10px;font-size:11px" onchange="loadToolList()"><option value="">全部网关</option></select><button class="bt bt-sm" onclick="loadToolList()">刷新</button></div></div>
+        <table><thead><tr><th>Gateway ID</th><th>Tool ID</th><th>工具名称</th><th>类型</th><th>协议ID</th><th>操作</th></tr></thead><tbody id="tl-tb"><tr><td colspan="6" class="ld"><span class="sp"></span>加载中...</td></tr></tbody></table>
+        <div class="pg" id="tl-pg"></div>
+      </div>
+    </div>
+    <!-- ====== 鉴权列表 ====== -->
+    <div class="sec" id="sec-auth-list">
+      <div class="tw">
+        <div class="thd"><h2>所有鉴权</h2><div class="tha"><select id="al-gw" style="width:180px;padding:6px 10px;font-size:11px" onchange="loadAuthList()"><option value="">全部网关</option></select><button class="bt bt-sm" onclick="loadAuthList()">刷新</button></div></div>
+        <table><thead><tr><th>Gateway ID</th><th>API Key</th><th>限流/h</th><th>过期时间</th><th>操作</th></tr></thead><tbody id="al-tb"><tr><td colspan="5" class="ld"><span class="sp"></span>加载中...</td></tr></tbody></table>
+        <div class="pg" id="al-pg"></div>
+      </div>
+    </div>
+    <!-- ====== 协议列表 ====== -->
+    <div class="sec" id="sec-protocol-list">
+      <div class="tw">
+        <div class="thd"><h2>所有协议</h2><div class="tha"><button class="bt bt-sm" onclick="loadProtocolList()">刷新</button></div></div>
+        <table><thead><tr><th>Protocol ID</th><th>方法</th><th>URL</th><th>Mappings</th><th>操作</th></tr></thead><tbody id="pl-tb"><tr><td colspan="5" class="ld"><span class="sp"></span>加载中...</td></tr></tbody></table>
+        <div class="pg" id="pl-pg"></div>
+      </div>
+      <div class="fc">
+        <h2><span class="tag tp">POST</span> Swagger JSON 导入/解析</h2>
+        <div class="fgi fl"><label>Swagger URL 或 直接粘贴 JSON <span class="req">*</span></label>
+          <div style="display:flex;gap:8px"><input class="mono" id="imp-src" placeholder="http://localhost:8701/v3/api-docs（填写URL自动获取，或直接粘贴完整JSON）" style="flex:1"><button class="bt bt-pr bt-sm" onclick="loadSwaggerPaths()">加载接口列表</button></div></div>
+        <div class="fgi fl" id="imp-paths-wrap" style="display:none">
+          <label>选择要导入的接口 <span class="req">*</span></label>
+          <div style="display:flex;gap:8px;margin-bottom:8px"><button class="bt bt-sm" onclick="selAllPaths(true)">全选</button><button class="bt bt-sm" onclick="selAllPaths(false)">取消全选</button><span id="imp-sel-count" style="font-size:11px;color:var(--tx2);line-height:28px"></span></div>
+          <div id="imp-paths" style="max-height:200px;overflow-y:auto;background:var(--elv);border:1px solid var(--brd2);border-radius:var(--r);padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:4px"></div></div>
+        <div class="fa"><button class="bt" onclick="analysisProtocol()">仅解析预览</button><button class="bt bt-pr" onclick="importProtocol()">解析并入库</button><span id="imp-pv" style="font-size:11px;color:var(--tx3);margin-left:12px"></span></div>
+      </div>
+    </div>
+    <!-- ====== 新增网关 ====== -->
+    <div class="sec" id="sec-gateway-create"><div class="fc"><h2><span class="tag tp">POST</span> 新增网关</h2><div class="fg"><div class="fgi"><label>Gateway ID <span class="req">*</span></label><input class="mono" id="gc-id" placeholder="gateway_003"></div><div class="fgi"><label>网关名称 <span class="req">*</span></label><input id="gc-nm" placeholder="测试网关"></div><div class="fgi"><label>版本</label><input id="gc-v" placeholder="1.0.0" value="1.0.0"></div><div class="fgi"><label>鉴权模式</label><select id="gc-au"><option value="1">启用</option><option value="0">禁用</option></select></div><div class="fgi fl"><label>描述</label><input id="gc-ds" placeholder="用于查询公司员工信息的MCP网关"></div><div class="fgi"><label>校验模式</label><select id="gc-st"><option value="1">强校验</option><option value="0">不校验</option></select></div></div><div class="fa"><button class="bt bt-pr" onclick="saveGatewayConfig()">保存配置</button></div></div></div>
+    <!-- ====== 新增工具 ====== -->
+    <div class="sec" id="sec-tool-create"><div class="fc"><h2><span class="tag tp">POST</span> 新增工具</h2><div class="fg"><div class="fgi"><label>Gateway ID <span class="req">*</span></label><input class="mono" id="tc-id" placeholder="gateway_003"></div><div class="fgi"><label>Tool ID <span class="req">*</span></label><input class="mono" id="tc-tid" type="number" placeholder="1001"></div><div class="fgi"><label>工具名称 <span class="req">*</span></label><input id="tc-nm" placeholder="JavaSDKMCPClient_getCompanyEmployee"></div><div class="fgi"><label>工具类型</label><select id="tc-tp"><option value="function">function</option><option value="resource">resource</option></select></div><div class="fgi"><label>协议ID</label><input class="mono" id="tc-pid" type="number" placeholder="87971207"></div><div class="fgi"><label>协议类型</label><input id="tc-pt" placeholder="http" value="http"></div><div class="fgi"><label>版本</label><input id="tc-v" placeholder="1.0.0" value="1.0.0"></div><div class="fgi fl"><label>描述</label><input id="tc-ds" placeholder="获取公司雇员信息"></div></div><div class="fa"><button class="bt bt-pr" onclick="saveToolConfig()">保存工具</button></div></div></div>
+    <!-- ====== 新增鉴权 ====== -->
+    <div class="sec" id="sec-auth-create"><div class="fc"><h2><span class="tag tp">POST</span> 新增鉴权</h2><div class="fg"><div class="fgi"><label>Gateway ID <span class="req">*</span></label><input class="mono" id="ac-id" placeholder="gateway_003"></div><div class="fgi"><label>限流配额（次/小时）</label><input class="mono" id="ac-rl" type="number" value="1000"></div><div class="fgi"><label>过期时间</label><input id="ac-ex" type="datetime-local"><div class="hint">留空=永不过期</div></div></div><div class="fa"><button class="bt bt-pr" onclick="saveGatewayAuth()">生成 API Key</button></div></div></div>
+    <!-- ====== 新增协议 ====== -->
+    <div class="sec" id="sec-protocol-create"><div class="fc"><h2><span class="tag tp">POST</span> 新增协议</h2><div class="fg"><div class="fgi"><label>Protocol ID</label><input class="mono" id="pc-id" type="number" placeholder="自动生成"></div><div class="fgi"><label>HTTP方法 <span class="req">*</span></label><select id="pc-mt"><option value="post">POST</option><option value="get">GET</option></select></div><div class="fgi fl"><label>HTTP URL <span class="req">*</span></label><input class="mono" id="pc-ur" placeholder="http://localhost:8701/api/v1/mcp/test"></div><div class="fgi"><label>超时(ms)</label><input class="mono" id="pc-to" type="number" value="30000"></div><div class="fgi"><label>请求头(JSON)</label><input class="mono" id="pc-hd" value='{"Content-Type":"application/json"}'></div><div class="fgi fl"><label>Mappings（JSON Array）<span class="req">*</span></label><textarea class="mono" id="pc-mp" placeholder='[{"mappingType":"request","parentPath":null,"fieldName":"city","mcpPath":"city","mcpType":"string","mcpDesc":"城市","isRequired":1,"sortOrder":1}]'></textarea></div></div><div class="fa"><button class="bt bt-pr" onclick="saveProtocol()">保存协议</button></div></div></div>
+  </div>
+</div>
+<!-- Edit Modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <h2>修改网关配置</h2>
+    <div class="fg">
+      <div class="fgi"><label>Gateway ID</label><input class="mono" id="em-id" readonly></div>
+      <div class="fgi"><label>网关名称 <span class="req">*</span></label><input id="em-nm"></div>
+      <div class="fgi"><label>版本</label><input id="em-v"></div>
+      <div class="fgi"><label>鉴权模式</label><select id="em-au"><option value="1">启用</option><option value="0">禁用</option></select></div>
+      <div class="fgi fl"><label>描述</label><input id="em-ds"></div>
+      <div class="fgi"><label>校验模式</label><select id="em-st"><option value="1">强校验</option><option value="0">不校验</option></select></div>
+    </div>
+    <div class="fa"><button class="bt" onclick="closeModal()">取消</button><button class="bt bt-pr" onclick="updateGateway()">保存修改</button></div>
+  </div>
+
+<!-- Auth Edit Modal -->
+<div class="modal-overlay" id="auth-edit-modal">
+  <div class="modal">
+    <h2>修改鉴权配置</h2>
+    <div class="fg">
+      <div class="fgi"><label>Gateway ID</label><input class="mono" id="aem-id" readonly></div>
+      <div class="fgi"><label>API Key</label><input class="mono" id="aem-key" readonly></div>
+      <div class="fgi fl"><label>限流配额（次/小时）<span class="req">*</span></label><input class="mono" id="aem-rl" type="number"></div>
+      <div class="fgi"><label>过期时间</label><input id="aem-ex" type="datetime-local"><div class="hint">留空=永不过期</div></div>
+    </div>
+    <div class="fa"><button class="bt" onclick="closeAuthModal()">取消</button><button class="bt bt-pr" onclick="updateAuth()">保存修改</button></div>
+  </div>
+</div>
+</div>
+<div class="toast-ct" id="toast-ct"></div>
+<script>
+const B='http://localhost:8090/api-gateway/admin';
+function toast(msg,ok=true){const t=document.createElement('div');t.className='toast '+(ok?'ok':'er');t.textContent=msg;document.getElementById('toast-ct').appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 200ms';setTimeout(()=>t.remove(),200)},3000)}
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'-'}
+async function apip(path,bd){const r=await fetch(B+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bd)});const d=await r.json();if(d&&d.code==='0000'){toast('操作成功');return d}toast(d?.info||'失败',false);throw new Error(d?.info)}
+async function apig(path){const r=await fetch(B+path);return r.json()}
+
+// Navigation
+const secs=document.querySelectorAll('.sec'),nis=document.querySelectorAll('.ni'),maps={};
+function navTo(k){nis.forEach(n=>n.classList.toggle('act',n.dataset.sec===k));secs.forEach(s=>s.classList.toggle('act',s.id==='sec-'+k))}
+nis.forEach(n=>n.addEventListener('click',()=>{navTo(n.dataset.sec);(maps[n.dataset.sec]||(()=>{}))()}));
+function regLoad(k,fn){maps[k]=fn}
+
+// Pagination
+let gwAll=[],tlAll=[],alAll=[],plAll=[],pgSz=5;
+let gwPg=1,tlPg=1,alPg=1,plPg=1;
+function renderPg(cur,total,id,fn){const el=document.getElementById(id);if(!el)return;const pages=Math.ceil(total/pgSz);if(pages<=1){el.innerHTML='';return}
+el.innerHTML=(cur>1?`<button class="bt bt-sm" onclick="void(0)">«</button><button class="bt bt-sm" onclick="void(0)">‹</button>`:'')+`<span class="pg-info">${cur}/${pages} 共${total}条</span>`+(cur<pages?`<button class="bt bt-sm" onclick="void(0)">›</button><button class="bt bt-sm" onclick="void(0)">»</button>`:'');
+el.querySelectorAll('.bt-sm').forEach((b,i)=>{const a=['first','prev','next','last'];b.onclick=()=>{if(a[i]==='first')fn(1);else if(a[i]==='prev')fn(cur-1);else if(a[i]==='next')fn(cur+1);else fn(pages)}})}
+function pgList(all,pg,renderFn,elFn){const start=(pg-1)*pgSz;return {sliced:all.slice(start,start+pgSz),total:all.length}}
+
+// === Gateway List ===
+async function loadGatewayList(){const tb=document.getElementById('gw-tb');tb.innerHTML='<tr><td colspan="7" class="ld"><span class="sp"></span>加载中...</td></tr>';
+try{const d=await apig('/query_gateway_config_list');
+if(d?.code==='0000'&&d.data){gwAll=d.data;gwPg=1;renderGwPage();updateGwOptions()}else tb.innerHTML='<tr><td colspan="7" class="em" style="color:var(--er)">加载失败</td></tr>'}
+catch(e){tb.innerHTML='<tr><td colspan="7" class="em" style="color:var(--er)">网络请求失败</td></tr>'}}
+function renderGwPage(){const b=document.getElementById('gw-tb'),p=pgList(gwAll,gwPg,renderGwPage,'gw-tb');gwAll=p.sliced;
+document.getElementById('sr').innerHTML=`<div class="sc"><div class="sl">网关总数</div><div class="sv">${gwAll.length}</div></div><div class="sc"><div class="sl">启用鉴权</div><div class="sv">${gwAll.filter(i=>i.auth===1).length}</div></div><div class="sc"><div class="sl">强校验</div><div class="sv">${gwAll.filter(i=>i.status===1).length}</div></div><div class="sc"><div class="sl">不校验</div><div class="sv">${gwAll.filter(i=>i.status===0).length}</div></div>`;
+b.innerHTML=gwAll.length?gwAll.map(i=>`<tr><td><span class="co">${esc(i.gatewayId)}</span></td><td style="font-weight:600">${esc(i.gatewayName)}</td><td style="color:var(--tx2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.gatewayDesc)}</td><td style="font-family:var(--m);font-size:11px;color:var(--tx3)">${esc(i.version)}</td><td>${i.auth===1?'<span class="bad bad-on"><span class="bad-d on"></span>启用</span>':'<span class="bad bad-off"><span class="bad-d off"></span>禁用</span>'}</td><td>${i.status===1?'<span class="bad bad-str">强校验</span>':'<span class="bad bad-no">不校验</span>'}</td><td style="display:flex;gap:6px"><button class="bt bt-sm" onclick="editGw(\`${i.gatewayId}\`,\`${i.gatewayName}\`,\`${i.gatewayDesc||''}\`,\`${i.version||''}\`,${i.auth},${i.status})">修改</button><button class="bt bt-sm" onclick="viewTools('${esc(i.gatewayId)}')">工具</button><button class="bt bt-sm" onclick="viewAuth('${esc(i.gatewayId)}')">认证</button></td></tr>`).join(''):'<tr><td colspan="7" class="em">暂无数据</td></tr>';
+renderPg(gwPg,p.total,'gw-pg',p=>{gwPg=p;const r=pgList(gwAll,gwPg,renderGwPage,'gw-tb');document.getElementById('gw-tb').innerHTML=r.sliced.map(i=>`<tr><td><span class="co">${esc(i.gatewayId)}</span></td><td style="font-weight:600">${esc(i.gatewayName)}</td><td style="color:var(--tx2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.gatewayDesc)}</td><td style="font-family:var(--m);font-size:11px;color:var(--tx3)">${esc(i.version)}</td><td>${i.auth===1?'<span class="bad bad-on"><span class="bad-d on"></span>启用</span>':'<span class="bad bad-off"><span class="bad-d off"></span>禁用</span>'}</td><td>${i.status===1?'<span class="bad bad-str">强校验</span>':'<span class="bad bad-no">不校验</span>'}</td><td style="display:flex;gap:6px"><button class="bt bt-sm" onclick="editGw(\`${i.gatewayId}\`,\`${i.gatewayName}\`,\`${i.gatewayDesc||''}\`,\`${i.version||''}\`,${i.auth},${i.status})">修改</button><button class="bt bt-sm" onclick="viewTools('${esc(i.gatewayId)}')">工具</button><button class="bt bt-sm" onclick="viewAuth('${esc(i.gatewayId)}')">认证</button></td></tr>`).join('');renderPg(p,p.total,'gw-pg',arguments.callee)})}
+regLoad('gateway-list',loadGatewayList);
+
+// Edit modal
+function editGw(id,nm,ds,v,au,st){document.getElementById('em-id').value=id;document.getElementById('em-nm').value=nm;document.getElementById('em-ds').value=ds;document.getElementById('em-v').value=v;document.getElementById('em-au').value=au;document.getElementById('em-st').value=st;document.getElementById('edit-modal').classList.add('show')}
+function closeModal(){document.getElementById('edit-modal').classList.remove('show')}
+async function updateGateway(){try{const id=document.getElementById('em-id').value;await apip('/save_gateway_config',{gatewayId:id,gatewayName:document.getElementById('em-nm').value,gatewayDesc:document.getElementById('em-ds').value,version:document.getElementById('em-v').value,auth:parseInt(document.getElementById('em-au').value),status:parseInt(document.getElementById('em-st').value)});closeModal();loadGatewayList()}catch(e){closeModal()}}
+function viewTools(gwId){navTo('tool-list');document.getElementById('tl-gw').value=gwId;loadToolList()}
+function viewAuth(gwId){navTo('auth-list');document.getElementById('al-gw').value=gwId;loadAuthList()}
+
+// Dropdown options
+async function updateGwOptions(){const d=await apig('/query_gateway_config_list');if(d?.code==='0000'&&d.data){const ops=d.data.map(g=>`<option value="${g.gatewayId}">${g.gatewayName}</option>`).join('');['tl-gw','al-gw'].forEach(id=>{const s=document.getElementById(id);if(s){const v=s.value;s.innerHTML='<option value="">全部网关</option>'+ops;s.value=v}})}}
+
+// === Tool List ===
+async function loadToolList(){const tb=document.getElementById('tl-tb');tb.innerHTML='<tr><td colspan="6" class="ld"><span class="sp"></span>加载中...</td></tr>';
+const gwId=document.getElementById('tl-gw').value;
+const url=gwId?`/query_gateway_tool_list_by_gateway_id?gatewayId=${gwId}`:'/query_gateway_tool_list';
+try{const d=await apig(url);if(d?.code==='0000'&&d.data){tlAll=d.data;tlPg=1;renderTlPage()}else tb.innerHTML='<tr><td colspan="6" class="em">暂无数据</td></tr>'}catch(e){tb.innerHTML='<tr><td colspan="6" class="em" style="color:var(--er)">请求失败</td></tr>'}}
+function renderTlPage(){const p=pgList(tlAll,tlPg,renderTlPage,'tl-tb');
+document.getElementById('tl-tb').innerHTML=p.sliced.length?p.sliced.map(i=>`<tr><td><span class="co">${esc(i.gatewayId)}</span></td><td style="font-family:var(--m)">${i.toolId}</td><td style="font-weight:500">${esc(i.toolName)}</td><td>${esc(i.toolType)}</td><td style="font-family:var(--m)">${i.protocolId||'-'}</td><td><button class="bt bt-er bt-sm" onclick="delTool('${esc(i.gatewayId)}',${i.toolId})">删除</button></td></tr>`).join(''):'<tr><td colspan="6" class="em">暂无数据</td></tr>';
+renderPg(tlPg,p.total,'tl-pg',p=>{tlPg=p;renderTlPage()})}
+async function delTool(gid,tid){if(!confirm(`删除 ${gid} 下的工具 ${tid}？`))return;await apip(`/delete_gateway_tool_config?gatewayId=${gid}&toolId=${tid}`,{});loadToolList()}
+regLoad('tool-list',loadToolList);
+
+// === Auth List ===
+async function loadAuthList(){const tb=document.getElementById('al-tb');tb.innerHTML='<tr><td colspan="5" class="ld"><span class="sp"></span>加载中...</td></tr>';
+try{const d=await apig('/query_gateway_auth_list');if(d?.code==='0000'&&d.data){alAll=d.data;const gwId=document.getElementById('al-gw').value;alAll=gwId?alAll.filter(a=>a.gatewayId===gwId):alAll;alPg=1;renderAlPage()}else tb.innerHTML='<tr><td colspan="5" class="em">暂无数据</td></tr>'}catch(e){tb.innerHTML='<tr><td colspan="5" class="em" style="color:var(--er)">请求失败</td></tr>'}}
+function renderAlPage(){const p=pgList(alAll,alPg,renderAlPage,'al-tb');
+document.getElementById('al-tb').innerHTML=p.sliced.length?p.sliced.map(i=>`<tr><td><span class="co">${esc(i.gatewayId)}</span></td><td><span class="co" style="font-size:11px">${esc(i.apiKey)}</span></td><td style="font-family:var(--m)">${i.rateLimit}</td><td>${i.expireTime||'永久'}</td><td style="display:flex;gap:6px"><button class="bt bt-sm" onclick="editAuth(\`${esc(i.gatewayId)}\`,\`${esc(i.apiKey)}\`,${i.rateLimit},\`${i.expireTime||''}\`)">编辑</button><button class="bt bt-er bt-sm" onclick="delAuth('${esc(i.gatewayId)}')">删除</button></td></tr>`).join(''):'<tr><td colspan="5" class="em">暂无数据</td></tr>';
+renderPg(alPg,p.total,'al-pg',p=>{alPg=p;renderAlPage()})}
+async function delAuth(gid){if(!confirm(`删除 ${gid} 的鉴权？`))return;await apip(`/delete_gateway_auth?gatewayId=${gid}`,{});loadAuthList()}
+function editAuth(gid,key,rl,ex){document.getElementById('aem-id').value=gid;document.getElementById('aem-key').value=key;document.getElementById('aem-rl').value=rl;if(ex&&ex!=='null'){try{const d=new Date(ex);document.getElementById('aem-ex').value=d.toISOString().slice(0,16)}catch(e){}}document.getElementById('auth-edit-modal').classList.add('show')}
+function closeAuthModal(){document.getElementById('auth-edit-modal').classList.remove('show')}
+async function updateAuth(){const gid=document.getElementById('aem-id').value,rl=parseInt(document.getElementById('aem-rl').value),ex=document.getElementById('aem-ex').value;await apip(`/update_gateway_auth?gatewayId=${gid}&rateLimit=${rl}&expireTime=${encodeURIComponent(ex||'')}`,{});closeAuthModal();loadAuthList()}
+regLoad('auth-list',loadAuthList);
+
+// === Protocol List ===
+async function loadProtocolList(){const tb=document.getElementById('pl-tb');tb.innerHTML='<tr><td colspan="5" class="ld"><span class="sp"></span>加载中...</td></tr>';
+try{const d=await apig('/query_gateway_protocol_list');if(d?.code==='0000'&&d.data){plAll=d.data;plPg=1;renderPlPage()}else tb.innerHTML='<tr><td colspan="5" class="em">暂无数据</td></tr>'}catch(e){tb.innerHTML='<tr><td colspan="5" class="em" style="color:var(--er)">请求失败</td></tr>'}}
+function renderPlPage(){const p=pgList(plAll,plPg,renderPlPage,'pl-tb');
+document.getElementById('pl-tb').innerHTML=p.sliced.length?p.sliced.map(i=>`<tr><td style="font-family:var(--m)">${i.protocolId}</td><td style="font-family:var(--m)">${(i.httpMethod||'').toUpperCase()}</td><td><span class="co">${esc(i.httpUrl)}</span></td><td>${(i.mappings||[]).length}</td><td><button class="bt bt-er bt-sm" onclick="delProtocol(${i.protocolId})">删除</button></td></tr>`).join(''):'<tr><td colspan="5" class="em">暂无数据</td></tr>';
+renderPg(plPg,p.total,'pl-pg',p=>{plPg=p;renderPlPage()})}
+async function delProtocol(pid){if(!confirm(`删除协议 ${pid} 及其映射？`))return;await apip(`/delete_gateway_protocol?protocolId=${pid}`,{});loadProtocolList()}
+regLoad('protocol-list',loadProtocolList);
+
+// Import / Analysis
+let impSwaggerJson = '', impSwaggerPaths = [];
+
+async function loadSwaggerPaths(){
+  const src = document.getElementById('imp-src').value.trim();
+  if(!src){toast('请填写 Swagger URL 或粘贴 JSON',false);return}
+  // 判断是 URL 还是 JSON
+  if(src.startsWith('http://')||src.startsWith('https://')){
+    try{const r=await fetch(src);impSwaggerJson=await r.text()}catch(e){toast('获取 Swagger JSON 失败: '+e.message,false);return}
+  }else{
+    impSwaggerJson = src;
+  }
+  try{
+    const root = JSON.parse(impSwaggerJson);
+    impSwaggerPaths = Object.keys(root.paths||{});
+    if(!impSwaggerPaths.length){toast('未找到接口路径',false);return}
+    const wrap = document.getElementById('imp-paths-wrap'); wrap.style.display='block';
+    document.getElementById('imp-paths').innerHTML = impSwaggerPaths.map((p,i) => `<label style="font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:6px;cursor:pointer;padding:2px 0"><input type="checkbox" value="${p}" class="imp-cb" checked onchange="updateSelCount()"><span class="co">${p}</span></label>`).join('');
+    document.getElementById('imp-sel-count').textContent = `已选 ${impSwaggerPaths.length}/${impSwaggerPaths.length}`;
+    toast(`找到 ${impSwaggerPaths.length} 个接口`);
+  }catch(e){toast('JSON 格式错误',false)}
+}
+function selAllPaths(sel){document.querySelectorAll('.imp-cb').forEach(cb=>{cb.checked=sel});updateSelCount()}
+function updateSelCount(){const cbs=document.querySelectorAll('.imp-cb'),total=cbs.length,sel=document.querySelectorAll('.imp-cb:checked').length;document.getElementById('imp-sel-count').textContent=`已选 ${sel}/${total}`}
+function getSelectedPaths(){return [...document.querySelectorAll('.imp-cb:checked')].map(cb=>cb.value)}
+
+async function analysisProtocol(){
+  if(!impSwaggerJson){toast('请先加载 Swagger JSON',false);return}
+  const eps = getSelectedPaths();
+  if(!eps.length){toast('请至少选择一个接口',false);return}
+  const d = await apip('/analysis_protocol',{openApiJson:impSwaggerJson,endpoints:eps});
+  if(d?.data)document.getElementById('imp-pv').textContent=`预览: ${d.data.length}个协议, ${d.data.reduce((s,p)=>s+(p.mappings||[]).length,0)}条映射`
+}
+async function importProtocol(){
+  if(!impSwaggerJson){toast('请先加载 Swagger JSON',false);return}
+  const eps = getSelectedPaths();
+  if(!eps.length){toast('请至少选择一个接口',false);return}
+  await apip('/import_gateway_protocol',{openApiJson:impSwaggerJson,endpoints:eps});
+  loadProtocolList()
+}
+
+// Forms
+function saveGatewayConfig(){const b={gatewayId:document.getElementById('gc-id').value,gatewayName:document.getElementById('gc-nm').value,gatewayDesc:document.getElementById('gc-ds').value,version:document.getElementById('gc-v').value,auth:parseInt(document.getElementById('gc-au').value),status:parseInt(document.getElementById('gc-st').value)};apip('/save_gateway_config',b)}
+function saveToolConfig(){const b={gatewayId:document.getElementById('tc-id').value,toolId:parseInt(document.getElementById('tc-tid').value),toolName:document.getElementById('tc-nm').value,toolType:document.getElementById('tc-tp').value,toolDescription:document.getElementById('tc-ds').value,toolVersion:document.getElementById('tc-v').value,protocolId:parseInt(document.getElementById('tc-pid').value),protocolType:document.getElementById('tc-pt').value};apip('/save_gateway_tool_config',b)}
+function saveGatewayAuth(){const ex=document.getElementById('ac-ex').value,body={gatewayId:document.getElementById('ac-id').value,rateLimit:parseInt(document.getElementById('ac-rl').value),expireTime:ex?new Date(ex).toISOString().replace('Z',''):null};apip('/save_gateway_auth',body)}
+function saveProtocol(){let mp=null;const r=document.getElementById('pc-mp').value.trim();if(r){try{mp=JSON.parse(r)}catch(e){toast('Mappings JSON 格式错误',false);return}}const body={httpProtocols:[{protocolId:parseInt(document.getElementById('pc-id').value)||null,httpUrl:document.getElementById('pc-ur').value,httpMethod:document.getElementById('pc-mt').value,timeout:parseInt(document.getElementById('pc-to').value),httpHeaders:document.getElementById('pc-hd').value,mappings:mp}]};apip('/save_gateway_protocol',body)}
+
+// Login check
+if(localStorage.getItem('mcp_admin_logged_in')!=='true')window.location.href='index.html';
+loadGatewayList();updateGwOptions();
+</script>
+</body>
+</html>

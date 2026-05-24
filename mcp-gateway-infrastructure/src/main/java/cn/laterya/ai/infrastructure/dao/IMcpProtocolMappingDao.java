@@ -20,4 +20,6 @@ public interface IMcpProtocolMappingDao {
 
     List<McpProtocolMappingPO> queryAll();
 
+    int deleteByProtocolId(Long protocolId);
+
 }

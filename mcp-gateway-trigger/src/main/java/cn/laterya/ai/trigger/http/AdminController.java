@@ -239,6 +239,24 @@ public class AdminController implements IAdminService {
         } catch (Exception e) { return fail(e, "删除鉴权"); }
     }
 
+    @PostMapping("delete_gateway_protocol")
+    public Response<GatewayConfigResponseDTO> deleteGatewayProtocol(@RequestParam Long protocolId) {
+        try {
+            log.info("删除协议 protocolId:{}", protocolId);
+            adminProtocolService.deleteGatewayProtocol(protocolId);
+            return ok();
+        } catch (Exception e) { return fail(e, "删除协议"); }
+    }
+
+
+    @PostMapping("update_gateway_auth")
+    public Response<GatewayConfigResponseDTO> updateGatewayAuth(@RequestParam String gatewayId, @RequestParam Integer rateLimit, @RequestParam(required = false) String expireTime) {
+        try {
+            log.info("更新鉴权 gatewayId:{} rateLimit:{}", gatewayId, rateLimit);
+            adminAuthService.updateGatewayAuth(gatewayId, rateLimit, expireTime);
+            return ok();
+        } catch (Exception e) { return fail(e, "更新鉴权"); }
+    }
     // ==================== helpers ====================
 
     private StorageCommandEntity toStorageCommand(java.util.List<GatewayConfigRequestDTO.GatewayProtocol.HTTPProtocol> list) {

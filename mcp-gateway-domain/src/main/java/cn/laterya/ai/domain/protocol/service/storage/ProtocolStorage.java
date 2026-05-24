@@ -9,12 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * 协议存储服务
- *
- * <p>薄层编排：接收存储命令 → 提取 HTTPProtocolVO 列表 → 委托仓储端口持久化。
- * 业务逻辑在领域层，实际的 CRUD 细节在基础设施层。
- */
 @Slf4j
 @Service
 public class ProtocolStorage implements IProtocolStorage {
@@ -28,4 +22,9 @@ public class ProtocolStorage implements IProtocolStorage {
         return repository.saveHttpProtocolAndMapping(commandEntity.getHttpProtocolVOS());
     }
 
+    @Override
+    public void deleteByProtocolId(Long protocolId) {
+        log.info("删除协议 protocolId:{}", protocolId);
+        repository.deleteByProtocolId(protocolId);
+    }
 }
