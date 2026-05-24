@@ -1,14 +1,11 @@
 package cn.laterya.ai.trigger.http;
 
 import cn.laterya.ai.api.IMcpGatewayService;
+import cn.laterya.ai.cases.mcp.IMcpMessageService;
 import cn.laterya.ai.cases.mcp.IMcpSessionService;
-import cn.laterya.ai.domain.session.model.McpSchemaVO;
-import cn.laterya.ai.domain.session.model.SessionConfigVO;
-import cn.laterya.ai.domain.session.service.ISessionManagementService;
-import cn.laterya.ai.domain.session.service.ISessionMessageService;
+import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import cn.laterya.ai.types.enums.ResponseCode;
 import cn.laterya.ai.types.exception.AppException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -42,17 +39,11 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/")
 public class McpGatewayController implements IMcpGatewayService {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     @Resource
     private IMcpSessionService mcpSessionService;
 
-    // todo 暂时调用 domain 测试，后续调用 case 编排
     @Resource
-    private ISessionMessageService sessionMessageService;
-
-    @Resource
-    private ISessionManagementService sessionManagementService;
+    private IMcpMessageService mcpMessageService;
 
     @Override
     @GetMapping(value = "{gatewayId}/mcp/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -80,29 +71,9 @@ public class McpGatewayController implements IMcpGatewayService {
         try {
             log.info("处理 MCP SSE 消息 gatewayId:{} sessionId:{} messageBody:{}", gatewayId, sessionId, messageBody);
 
-            // 查找会话，不存在则拒绝
-            SessionConfigVO session = sessionManagementService.getSession(sessionId);
-            if (null == session) {
-                log.warn("会话不存在或已过期 gatewayId:{} sessionId:{}", gatewayId, sessionId);
-                return Mono.just(ResponseEntity.notFound().build());
-            }
-
-            // 反序列化 + 分发处理
-            McpSchemaVO.JSONRPCMessage jsonrpcMessage = McpSchemaVO.deserializeJsonRpcMessage(messageBody);
-            log.info("反序列化消息 jsonrpc:{}", jsonrpcMessage.jsonrpc());
-
-            McpSchemaVO.JSONRPCResponse jsonrpcResponse = sessionMessageService.processHandlerMessage(gatewayId, jsonrpcMessage);
-
-            // 处理结果通过 SSE Sink 推回客户端
-            if (null != jsonrpcResponse) {
-                String responseJson = OBJECT_MAPPER.writeValueAsString(jsonrpcResponse);
-                session.getSink().tryEmitNext(ServerSentEvent.<String>builder()
-                        .event("message")
-                        .data(responseJson)
-                        .build());
-            }
-
-            return Mono.just(ResponseEntity.accepted().build());
+            HandleMessageCommandEntity commandEntity = new HandleMessageCommandEntity(gatewayId, sessionId, messageBody);
+            ResponseEntity<Void> responseEntity = mcpMessageService.handleMessage(commandEntity);
+            return Mono.just(responseEntity);
         } catch (Exception e) {
             log.error("处理 MCP SSE 消息失败 gatewayId:{} sessionId:{} messageBody:{}", gatewayId, sessionId, messageBody, e);
             return Mono.just(ResponseEntity.internalServerError().build());
