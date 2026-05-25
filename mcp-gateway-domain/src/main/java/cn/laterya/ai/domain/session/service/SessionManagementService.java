@@ -1,22 +1,21 @@
 package cn.laterya.ai.domain.session.service;
 
+import cn.laterya.ai.domain.session.adapter.store.ISessionStore;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Sinks;
 
-import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 会话管理服务实现
  *
  * <p>职责：管理 MCP 客户端的 SSE 会话生命周期（创建、查询、过期清理、关闭）。
+ * 会话存储委托给可插拔的 {@link ISessionStore}，默认使用 InMemorySessionStore。
  *
  * <p>MCP SSE 协议流程：
  * <pre>
@@ -27,35 +26,21 @@ import java.util.concurrent.TimeUnit;
  * 5. 会话超时或断开 → removeSession() 清理资源
  * </pre>
  *
- * <p>线程安全设计：
- * <ul>
- *   <li>ConcurrentHashMap：保证会话表读写的线程安全</li>
- *   <li>SessionConfigVO 内部字段 volatile：保证对象状态的跨线程可见性</li>
- *   <li>两者缺一不可——容器安全 ≠ 元素安全</li>
- * </ul>
+ * <p>线程安全由 {@link ISessionStore} 实现保证。
  */
 @Slf4j
 @Service
 public class SessionManagementService implements ISessionManagementService {
 
-    /** 会话超时阈值（分钟），可抽取到 yml 配置 */
     private static final long SESSION_TIMEOUT_MINUTES = 30;
 
-    /** 单线程定时调度器，每 5 分钟扫描过期会话 */
-    private final ScheduledExecutorService cleanupScheduler = Executors.newSingleThreadScheduledExecutor();
-
-    /** 活跃会话表，key=sessionId，value=会话配置（含 Sink） */
-    private final Map<String, SessionConfigVO> activeSessions = new ConcurrentHashMap<>();
-
-    public SessionManagementService() {
-        cleanupScheduler.scheduleAtFixedRate(this::cleanupExpiredSessions, 5, 5, TimeUnit.MINUTES);
-        log.info("会话管理服务已启动，会话超时时间: {} 分钟", SESSION_TIMEOUT_MINUTES);
-    }
+    @Resource
+    private ISessionStore sessionStore;
 
     /**
      * 创建会话
      *
-     * <p>流程：生成 sessionId → 创建多播 Sink → 推送 endpoint 事件 → 存入活跃表
+     * <p>流程：生成 sessionId → 创建多播 Sink → 推送 endpoint 事件 → 委托 store 持久化
      *
      * <p>endpoint 事件示例：event: endpoint \n data: /gateway01/mcp/message?sessionId=abc-123
      * 客户端收到后，后续 POST 请求发往此地址。
@@ -82,25 +67,23 @@ public class SessionManagementService implements ISessionManagementService {
 
         SessionConfigVO sessionConfigVO = new SessionConfigVO(sessionId, sink);
 
-        activeSessions.put(sessionId, sessionConfigVO);
-
-        log.info("创建会话 gatewayId:{} sessionId:{},当前活跃会话数:{}", gatewayId, sessionId, activeSessions.size());
-
-        return sessionConfigVO;
+        return sessionStore.save(gatewayId, sessionConfigVO);
     }
 
     /**
      * 移除会话
      *
-     * <p>流程：从活跃表删除 → 标记 inactive → 关闭 Sink 流
+     * <p>流程：从 store 查找 → 标记 inactive → 关闭 Sink 流 → 从 store 删除
      * 关闭 Sink 会触发 SSE 连接断开，客户端收到连接关闭事件。
      */
     @Override
     public void removeSession(String sessionId) {
         log.info("删除会话配置 sessionId:{}", sessionId);
-        SessionConfigVO sessionConfigVO = activeSessions.remove(sessionId);
-        if (null == sessionConfigVO) return;
 
+        Optional<SessionConfigVO> opt = sessionStore.findById(sessionId);
+        if (opt.isEmpty()) return;
+
+        SessionConfigVO sessionConfigVO = opt.get();
         sessionConfigVO.markInactive();
 
         try {
@@ -109,7 +92,8 @@ public class SessionManagementService implements ISessionManagementService {
             log.warn("关闭会话Sink时出错:{}", e.getMessage());
         }
 
-        log.info("移除会话:{},剩余活跃会话数:{}", sessionId, activeSessions.size());
+        sessionStore.deleteById(sessionId);
+        log.info("移除会话:{} 完成", sessionId);
     }
 
     /**
@@ -124,8 +108,9 @@ public class SessionManagementService implements ISessionManagementService {
             return null;
         }
 
-        SessionConfigVO sessionConfigVO = activeSessions.get(sessionId);
-        if (null != sessionConfigVO && sessionConfigVO.isActive()) {
+        Optional<SessionConfigVO> opt = sessionStore.findById(sessionId);
+        if (opt.isPresent()) {
+            SessionConfigVO sessionConfigVO = opt.get();
             sessionConfigVO.updateLastAccessed();
             return sessionConfigVO;
         }
@@ -136,53 +121,44 @@ public class SessionManagementService implements ISessionManagementService {
     /**
      * 清理过期会话
      *
-     * <p>由 ScheduledExecutorService 每 5 分钟触发一次。
-     * 统一调用 removeSession() 保证关闭逻辑一致（标记 inactive + 关闭 Sink）。
+     * <p>遍历所有会话，对已过期或非活跃的会话调用 removeSession() 进行完整清理。
+     * InMemorySessionStore 内部也有独立的定时清理（仅移除存储条目），
+     * 本方法负责连带清理 Sink 资源。
      */
     @Override
     public void cleanupExpiredSessions() {
         int cleanedCount = 0;
 
-        for (Map.Entry<String, SessionConfigVO> entry : activeSessions.entrySet()) {
-            SessionConfigVO sessionConfigVO = entry.getValue();
+        for (String sessionId : sessionStore.getAllSessionIds()) {
+            Optional<SessionConfigVO> opt = sessionStore.findById(sessionId);
+            if (opt.isEmpty()) continue;
 
+            SessionConfigVO sessionConfigVO = opt.get();
             if (!sessionConfigVO.isActive() || sessionConfigVO.isExpired(SESSION_TIMEOUT_MINUTES)) {
-                removeSession(sessionConfigVO.getSessionId());
+                removeSession(sessionId);
                 cleanedCount++;
             }
-
         }
 
         if (cleanedCount > 0) {
-            log.info("清理了 {} 个过期会话，剩余活跃会话数: {}", cleanedCount, activeSessions.size());
+            log.info("清理了 {} 个过期会话", cleanedCount);
         }
     }
 
     /**
      * 优雅关闭
      *
-     * <p>应用停机时调用（可接入 Spring DisposableBean 或 @PreDestroy）。
-     * 流程：移除所有会话 → 停止调度器 → 等待 5 秒让正在执行的任务完成 → 超时强制关闭。
+     * <p>应用停机时调用。先清理所有会话的 Sink 资源，再关闭 store。
      */
     @Override
     public void shutdown() {
         log.info("关闭会话管理服务...");
 
-        for (String sessionId : activeSessions.keySet()) {
+        for (String sessionId : sessionStore.getAllSessionIds()) {
             removeSession(sessionId);
         }
 
-        cleanupScheduler.shutdown();
-
-        try {
-            if (!cleanupScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
-                cleanupScheduler.shutdown();
-            }
-        } catch (InterruptedException e) {
-            cleanupScheduler.shutdown();
-            Thread.currentThread().interrupt();
-        }
-
+        sessionStore.shutdown();
         log.info("关闭会话管理服务完成");
     }
 

@@ -2,9 +2,7 @@ package cn.laterya.ai.domain.auth.model.valobj.enums;
 
 import cn.laterya.ai.types.enums.ResponseCode;
 import cn.laterya.ai.types.exception.AppException;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * 鉴权状态枚举 —— 使用嵌套枚举将两类状态隔离在同一命名空间下
@@ -17,16 +15,19 @@ public enum AuthStatusEnum {
     ;
 
     @Getter
-    @AllArgsConstructor
-    @NoArgsConstructor
     public enum GatewayConfig {
 
         NOT_VERIFIED(0, "不校验"),
         STRONG_VERIFIED(1, "强校验"),
         ;
 
-        private Integer code;
-        private String info;
+        private final Integer code;
+        private final String info;
+
+        GatewayConfig(Integer code, String info) {
+            this.code = code;
+            this.info = info;
+        }
 
         public static GatewayConfig get(Integer code) {
             if (code == null) return null;
@@ -40,16 +41,19 @@ public enum AuthStatusEnum {
     }
 
     @Getter
-    @AllArgsConstructor
-    @NoArgsConstructor
     public enum AuthConfig {
 
         DISABLE(0, "禁用"),
         ENABLE(1, "启用"),
         ;
 
-        private Integer code;
-        private String info;
+        private final Integer code;
+        private final String info;
+
+        AuthConfig(Integer code, String info) {
+            this.code = code;
+            this.info = info;
+        }
 
         public static AuthConfig get(Integer code) {
             if (code == null) return null;
