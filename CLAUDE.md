@@ -137,4 +137,17 @@ Client POST /{gatewayId}/mcp/sse?sessionId=xxx
 - **OpenAI tool schema 要求**：protocol_mapping 的 request 映射必须有根 object 节点包裹（如 `GetEmployeeDetailRequest`），不能直接是裸字段，否则 OpenAI 拒绝
 - **SSE 端点 URL 拼接**：`server.servlet.context-path` 已含前导 `/`（如 `/api-gateway`），拼接路径时不要再额外加 `/`
 - **LLM 默认模型**：application.yml 中 `OPENAI_MODEL` 默认值为 `gpt-5.2`
-- **Docker MySQL 连接**：`docker exec mcp-gateway-mysql mysql -u root -p123456 mcp_gateway`，密码 `123456`
+
+## Agent skills
+
+### Issue Tracker
+
+GitHub Issues（仓库 `laterya/mcp-gateway`），通过 `gh` CLI 操作。详见 `docs/agents/issue-tracker.md`。
+
+### Triage Labels
+
+使用默认标签词汇：`needs-triage`、`needs-info`、`ready-for-agent`、`ready-for-human`、`wontfix`。详见 `docs/agents/triage-labels.md`。
+
+### Domain Docs
+
+单上下文模式 — `CONTEXT.md` + `docs/adr/` 位于仓库根目录。详见 `docs/agents/domain.md`。
