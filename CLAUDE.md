@@ -138,3 +138,41 @@ Client POST /{gatewayId}/mcp/sse?sessionId=xxx
 - **SSE 端点 URL 拼接**：`server.servlet.context-path` 已含前导 `/`（如 `/api-gateway`），拼接路径时不要再额外加 `/`
 - **LLM 默认模型**：application.yml 中 `OPENAI_MODEL` 默认值为 `gpt-5.2`
 - **Docker MySQL 连接**：`docker exec mcp-gateway-mysql mysql -u root -p123456 mcp_gateway`，密码 `123456`
+
+## Agent Skills
+
+本项目已安装 [Matt Pocock Skills](https://github.com/mattpocock/skills.git)（14 个 skill），通过 `skills` CLI 全局管理。
+
+### 可用 Skills
+
+| Skill | 用途 |
+|-------|------|
+| `diagnose` | 系统性调试循环：复现 → 最小化 → 假设 → 打点 → 修复 → 回归测试 |
+| `tdd` | 测试驱动开发：红-绿-重构循环 |
+| `triage` | Issue 分拣状态机 |
+| `to-issues` | 将计划/PRD 拆解为独立可抓取的 issue |
+| `to-prd` | 将对话上下文转为 PRD 并发布到 issue tracker |
+| `brainstorming` | 实现前的需求探索与设计对齐 |
+| `grill-me` | 对设计进行追问直到达成共识 |
+| `grill-with-docs` | 对照领域模型挑战计划，更新 CONTEXT.md 和 ADR |
+| `prototype` | 构建可丢弃的原型以验证设计 |
+| `improve-codebase-architecture` | 寻找代码库深化机会 |
+| `handoff` | 将当前对话压缩为交接文档 |
+| `write-a-skill` | 创建新的 agent skill |
+| `caveman` | 超压缩通信模式（节省约 75% token） |
+| `zoom-out` | 从高层视角审视项目 |
+
+### 使用方式
+
+在对话中直接提及 skill 名称或触发短语即可自动调用。例如：
+- "debug this bug" → 触发 `diagnose`
+- "add tests for X" → 触发 `tdd`
+- "triage this issue" → 触发 `triage`
+- "break this plan into issues" → 触发 `to-issues`
+
+### Issue Tracker 配置
+
+- **平台**：GitHub，仓库 `laterya/mcp-gateway`，使用 `gh` CLI
+- **Triage 标签**：`needs-triage` / `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`
+- 详见 `docs/agents/issue-tracker.md`、`docs/agents/triage-labels.md`
+- 领域文档布局：`CONTEXT.md` + `docs/adr/`，详见 `docs/agents/domain.md`
