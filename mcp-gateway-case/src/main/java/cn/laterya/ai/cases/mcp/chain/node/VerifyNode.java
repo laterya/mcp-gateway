@@ -4,8 +4,6 @@ import cn.laterya.ai.cases.mcp.chain.AbstractSessionChainNode;
 import cn.laterya.ai.cases.mcp.chain.SessionChainContext;
 import cn.laterya.ai.domain.auth.model.entity.LicenseCommandEntity;
 import cn.laterya.ai.domain.auth.service.IAuthLicenseService;
-import cn.laterya.ai.types.enums.McpErrorCodes;
-import cn.laterya.ai.types.exception.AppException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.ServerSentEvent;
@@ -26,11 +24,7 @@ public class VerifyNode extends AbstractSessionChainNode {
     protected Flux<ServerSentEvent<String>> doHandle(String gatewayId, SessionChainContext context) {
         log.info("鉴权校验 gatewayId:{}", gatewayId);
 
-        boolean isValid = authLicenseService.checkLicense(new LicenseCommandEntity(gatewayId, context.getApiKey()));
-        if (!isValid) {
-            log.warn("鉴权失败 gatewayId:{} apiKey:{}", gatewayId, context.getApiKey());
-            throw new AppException(McpErrorCodes.INSUFFICIENT_PERMISSIONS, "fail to auth apikey");
-        }
+        authLicenseService.checkLicenseOrThrow(new LicenseCommandEntity(gatewayId, context.getApiKey()));
 
         return fireNext(gatewayId, context);
     }

@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.http.codec.ServerSentEvent;
 import reactor.core.publisher.Sinks;
 
+import cn.laterya.ai.domain.session.model.enums.TransportTypeEnum;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
@@ -29,7 +31,7 @@ public class SessionConfigVO {
     private String sessionId;
 
     /**
-     * SSE 流式推送入口 —— 1:1 绑定于会话
+     * SSE 流式推送入口 —— SSE 传输时有值，Streamable HTTP 传输时为 null
      *
      * <p>Sinks 是 Project Reactor 提供的"手动往响应式流里推数据"的入口：
      * - tryEmitNext(data)  → 推一条消息给客户端
@@ -40,6 +42,9 @@ public class SessionConfigVO {
      * multicast 更健壮，且 onBackpressureBuffer 能缓冲数据防丢失。
      */
     private Sinks.Many<ServerSentEvent<String>> sink;
+
+    /** 传输方式，区分 SSE 和 Streamable HTTP */
+    private TransportTypeEnum transportType;
 
     /** 会话创建时间（不可变） */
     private Instant createTime;
@@ -69,8 +74,13 @@ public class SessionConfigVO {
      * 业务代码统一走此构造函数。
      */
     public SessionConfigVO(String sessionId, Sinks.Many<ServerSentEvent<String>> sink) {
+        this(sessionId, sink, TransportTypeEnum.SSE);
+    }
+
+    public SessionConfigVO(String sessionId, Sinks.Many<ServerSentEvent<String>> sink, TransportTypeEnum transportType) {
         this.sessionId = sessionId;
         this.sink = sink;
+        this.transportType = transportType;
         this.createTime = Instant.now();
         this.lastAccessedTime = Instant.now();
         this.active = true;

@@ -21,6 +21,16 @@ public interface ISessionManagementService {
      */
     SessionConfigVO createSession(String gatewayId, String apiKey);
 
+    /**
+     * 创建 Streamable HTTP 传输的会话
+     *
+     * <p>与 SSE 会话的区别：无 Sink、无 endpoint 事件推送，session ID 通过 Mcp-Session-Id 响应头返回。
+     *
+     * @param gatewayId 网关标识
+     * @return 不含 Sink 的会话配置对象
+     */
+    SessionConfigVO createStreamableSession(String gatewayId);
+
     /** 移除会话：从活跃表删除 + 标记 inactive + 关闭 Sink 流 */
     void removeSession(String sessionId);
 

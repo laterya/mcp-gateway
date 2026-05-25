@@ -1,6 +1,7 @@
 package cn.laterya.ai.domain.session.service;
 
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
+import cn.laterya.ai.domain.session.model.enums.TransportTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
@@ -89,6 +90,18 @@ public class SessionManagementService implements ISessionManagementService {
         return sessionConfigVO;
     }
 
+    @Override
+    public SessionConfigVO createStreamableSession(String gatewayId) {
+        log.info("创建Streamable HTTP会话 gatewayId:{}", gatewayId);
+
+        String sessionId = UUID.randomUUID().toString();
+        SessionConfigVO sessionConfigVO = new SessionConfigVO(sessionId, null, TransportTypeEnum.STREAMABLE_HTTP);
+        activeSessions.put(sessionId, sessionConfigVO);
+
+        log.info("创建Streamable HTTP会话 gatewayId:{} sessionId:{},当前活跃会话数:{}", gatewayId, sessionId, activeSessions.size());
+        return sessionConfigVO;
+    }
+
     /**
      * 移除会话
      *
@@ -104,7 +117,9 @@ public class SessionManagementService implements ISessionManagementService {
         sessionConfigVO.markInactive();
 
         try {
-            sessionConfigVO.getSink().tryEmitComplete();
+            if (sessionConfigVO.getSink() != null) {
+                sessionConfigVO.getSink().tryEmitComplete();
+            }
         } catch (Exception e) {
             log.warn("关闭会话Sink时出错:{}", e.getMessage());
         }
