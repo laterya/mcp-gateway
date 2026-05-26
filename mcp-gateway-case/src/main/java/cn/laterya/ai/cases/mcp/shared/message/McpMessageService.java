@@ -1,10 +1,8 @@
-package cn.laterya.ai.cases.mcp.sse;
+package cn.laterya.ai.cases.mcp.shared.message;
 
-import cn.laterya.ai.cases.mcp.sse.message.AbstractMessageChainNode;
-import cn.laterya.ai.cases.mcp.sse.message.MessageChainContext;
-import cn.laterya.ai.cases.mcp.sse.message.node.MessageHandlerNode;
-import cn.laterya.ai.cases.mcp.sse.message.node.MessageRootNode;
-import cn.laterya.ai.cases.mcp.sse.message.node.MessageSessionNode;
+import cn.laterya.ai.cases.mcp.shared.message.node.MessageHandlerNode;
+import cn.laterya.ai.cases.mcp.shared.message.node.MessageRootNode;
+import cn.laterya.ai.cases.mcp.shared.message.node.MessageSessionNode;
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
@@ -13,19 +11,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 /**
- * SSE 传输 — 消息处理编排服务
+ * 消息处理编排服务（SSE / Streamable 共用）
  *
  * <p>链路：MessageRootNode → MessageSessionNode → MessageHandlerNode
  */
 @Slf4j
-@Service("sseMcpMessageService")
-public class McpSseMessageService implements IMcpSseMessageService {
+@Service("mcpMessageService")
+public class McpMessageService implements IMcpMessageService {
 
-    @Resource(name = "sseMessageRootNode")
+    @Resource(name = "messageRootNode")
     private MessageRootNode messageRootNode;
-    @Resource(name = "sseMessageSessionNode")
+    @Resource(name = "messageSessionNode")
     private MessageSessionNode messageSessionNode;
-    @Resource(name = "sseMessageHandlerNode")
+    @Resource(name = "messageHandlerNode")
     private MessageHandlerNode messageHandlerNode;
 
     private AbstractMessageChainNode chain;
@@ -36,7 +34,7 @@ public class McpSseMessageService implements IMcpSseMessageService {
         messageRootNode.linkWith(messageSessionNode)
                 .linkWith(messageHandlerNode);
 
-        log.info("MCP SSE 消息编排链初始化完成: MessageRootNode → MessageSessionNode → MessageHandlerNode");
+        log.info("MCP 消息编排链初始化完成: MessageRootNode → MessageSessionNode → MessageHandlerNode");
     }
 
     @Override

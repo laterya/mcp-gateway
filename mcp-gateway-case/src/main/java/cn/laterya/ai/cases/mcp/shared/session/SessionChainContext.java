@@ -1,16 +1,15 @@
-package cn.laterya.ai.cases.mcp.streamable.session;
+package cn.laterya.ai.cases.mcp.shared.session;
 
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 
 /**
- * Streamable HTTP — 会话编排链上下文
+ * 会话编排链上下文（SSE / Streamable 共用）
  *
- * <p>与 SSE 的 SessionChainContext 的区别：
- * - 新增 messageBody（原始 JSON-RPC 请求体）和 initializeResponse（JSON-RPC 初始化响应）
- * - initialize 响应通过 HTTP body 返回，需要 Controller 从上下文取出 sessionId 和 response
+ * <p>Streamable HTTP 额外使用 messageBody 和 initializeResponse 字段；
+ * SSE 传输时这两个字段为 null。
  */
-public class StreamableSessionChainContext {
+public class SessionChainContext {
 
     private String apiKey;
     private String messageBody;

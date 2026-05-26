@@ -1,8 +1,8 @@
 package cn.laterya.ai.trigger.http;
 
-import cn.laterya.ai.cases.mcp.streamable.message.IMcpStreamableMessageService;
+import cn.laterya.ai.cases.mcp.shared.message.IMcpMessageService;
+import cn.laterya.ai.cases.mcp.shared.session.SessionChainContext;
 import cn.laterya.ai.cases.mcp.streamable.session.IMcpStreamableSessionService;
-import cn.laterya.ai.cases.mcp.streamable.session.StreamableSessionChainContext;
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
@@ -44,8 +44,8 @@ public class McpStreamableController {
     @Resource(name = "streamableMcpSessionService")
     private IMcpStreamableSessionService sessionService;
 
-    @Resource(name = "streamableMcpMessageService")
-    private IMcpStreamableMessageService messageService;
+    @Resource(name = "mcpMessageService")
+    private IMcpMessageService messageService;
 
     @Resource
     private ISessionManagementService sessionManagementService;
@@ -144,7 +144,7 @@ public class McpStreamableController {
 
     private ResponseEntity<String> handleInitialize(String gatewayId, String apiKey, String messageBody) throws Exception {
         log.info("Streamable HTTP 处理 initialize gatewayId:{}", gatewayId);
-        StreamableSessionChainContext context = sessionService.handleInitialize(gatewayId, apiKey, messageBody);
+        SessionChainContext context = sessionService.handleInitialize(gatewayId, apiKey, messageBody);
 
         String responseBody = objectMapper.writeValueAsString(context.getInitializeResponse());
         return ResponseEntity.ok()

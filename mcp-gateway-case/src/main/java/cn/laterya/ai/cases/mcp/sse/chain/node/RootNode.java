@@ -1,7 +1,7 @@
 package cn.laterya.ai.cases.mcp.sse.chain.node;
 
 import cn.laterya.ai.cases.mcp.sse.chain.AbstractSessionChainNode;
-import cn.laterya.ai.cases.mcp.sse.chain.SessionChainContext;
+import cn.laterya.ai.cases.mcp.shared.session.SessionChainContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Component;

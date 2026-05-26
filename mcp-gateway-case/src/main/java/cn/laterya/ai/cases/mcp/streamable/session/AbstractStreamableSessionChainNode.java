@@ -1,5 +1,7 @@
 package cn.laterya.ai.cases.mcp.streamable.session;
 
+import cn.laterya.ai.cases.mcp.shared.session.SessionChainContext;
+
 /**
  * Streamable HTTP — 会话编排链抽象节点
  *
@@ -17,16 +19,16 @@ public abstract class AbstractStreamableSessionChainNode {
         return next;
     }
 
-    public void handle(String gatewayId, StreamableSessionChainContext context) {
+    public void handle(String gatewayId, SessionChainContext context) {
         doHandle(gatewayId, context);
     }
 
-    protected void fireNext(String gatewayId, StreamableSessionChainContext context) {
+    protected void fireNext(String gatewayId, SessionChainContext context) {
         if (next != null) {
             next.handle(gatewayId, context);
         }
     }
 
-    protected abstract void doHandle(String gatewayId, StreamableSessionChainContext context);
+    protected abstract void doHandle(String gatewayId, SessionChainContext context);
 
 }
