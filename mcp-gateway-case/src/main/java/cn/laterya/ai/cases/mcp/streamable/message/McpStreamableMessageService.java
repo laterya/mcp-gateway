@@ -1,8 +1,10 @@
 package cn.laterya.ai.cases.mcp.streamable.message;
 
-import cn.laterya.ai.cases.mcp.streamable.message.node.StreamableMessageHandlerNode;
-import cn.laterya.ai.cases.mcp.streamable.message.node.StreamableMessageRootNode;
-import cn.laterya.ai.cases.mcp.streamable.message.node.StreamableMessageSessionNode;
+import cn.laterya.ai.cases.mcp.chain.AbstractChainNode;
+import cn.laterya.ai.cases.mcp.chain.MessageChainContext;
+import cn.laterya.ai.cases.mcp.chain.message.MessageHandlerNode;
+import cn.laterya.ai.cases.mcp.chain.message.MessageRootNode;
+import cn.laterya.ai.cases.mcp.chain.message.MessageSessionNode;
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
@@ -13,20 +15,20 @@ import org.springframework.stereotype.Service;
 /**
  * Streamable HTTP — 消息处理编排服务
  *
- * <p>链路：StreamableMessageRootNode → StreamableMessageSessionNode → StreamableMessageHandlerNode
+ * <p>链路：MessageRootNode → MessageSessionNode → MessageHandlerNode
  */
 @Slf4j
 @Service("streamableMcpMessageService")
 public class McpStreamableMessageService implements IMcpStreamableMessageService {
 
-    @Resource(name = "streamableMessageRootNode")
-    private StreamableMessageRootNode messageRootNode;
-    @Resource(name = "streamableMessageSessionNode")
-    private StreamableMessageSessionNode messageSessionNode;
-    @Resource(name = "streamableMessageHandlerNode")
-    private StreamableMessageHandlerNode messageHandlerNode;
+    @Resource(name = "mcpMessageRootNode")
+    private MessageRootNode messageRootNode;
+    @Resource(name = "mcpMessageSessionNode")
+    private MessageSessionNode messageSessionNode;
+    @Resource(name = "mcpMessageHandlerNode")
+    private MessageHandlerNode messageHandlerNode;
 
-    private AbstractStreamableMessageChainNode chain;
+    private AbstractChainNode<MessageChainContext, ResponseEntity<Void>> chain;
 
     @PostConstruct
     public void initChain() {
@@ -34,12 +36,12 @@ public class McpStreamableMessageService implements IMcpStreamableMessageService
         messageRootNode.linkWith(messageSessionNode)
                 .linkWith(messageHandlerNode);
 
-        log.info("MCP Streamable HTTP 消息编排链初始化完成: RootNode → SessionNode → HandlerNode");
+        log.info("MCP 消息编排链初始化完成 (Streamable HTTP): MessageRootNode → MessageSessionNode → MessageHandlerNode");
     }
 
     @Override
     public ResponseEntity<Void> handleMessage(HandleMessageCommandEntity commandEntity) throws Exception {
-        return chain.handle(commandEntity, new StreamableMessageChainContext());
+        return chain.handle(new MessageChainContext(commandEntity));
     }
 
 }

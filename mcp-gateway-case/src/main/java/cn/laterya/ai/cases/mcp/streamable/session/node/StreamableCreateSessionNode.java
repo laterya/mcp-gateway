@@ -1,8 +1,7 @@
 package cn.laterya.ai.cases.mcp.streamable.session.node;
 
-import cn.laterya.ai.cases.mcp.streamable.session.AbstractStreamableSessionChainNode;
-import cn.laterya.ai.cases.mcp.streamable.session.StreamableSessionChainContext;
-import cn.laterya.ai.domain.session.model.SessionConfigVO;
+import cn.laterya.ai.cases.mcp.chain.AbstractChainNode;
+import cn.laterya.ai.cases.mcp.chain.SessionChainContext;
 import cn.laterya.ai.domain.session.service.ISessionManagementService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -16,20 +15,20 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component("streamableCreateSessionNode")
-public class StreamableCreateSessionNode extends AbstractStreamableSessionChainNode {
+public class StreamableCreateSessionNode extends AbstractChainNode<SessionChainContext, Void> {
 
     @Resource
     private ISessionManagementService sessionManagementService;
 
     @Override
-    protected void doHandle(String gatewayId, StreamableSessionChainContext context) {
-        log.info("Streamable HTTP 创建会话 gatewayId:{}", gatewayId);
+    protected Void doHandle(SessionChainContext context) {
+        log.info("Streamable HTTP 创建会话 gatewayId:{}", context.getGatewayId());
 
-        // 不带 apiKey 的重载 — 不推送 endpoint 事件
-        SessionConfigVO sessionConfigVO = sessionManagementService.createSession(gatewayId);
+        var sessionConfigVO = sessionManagementService.createSession(context.getGatewayId());
         context.setSessionConfigVO(sessionConfigVO);
 
-        fireNext(gatewayId, context);
+        fireNext(context);
+        return null;
     }
 
 }
