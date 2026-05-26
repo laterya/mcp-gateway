@@ -4,8 +4,8 @@ import cn.laterya.ai.api.IAdminService;
 import cn.laterya.ai.api.dto.*;
 import cn.laterya.ai.api.response.Response;
 import cn.laterya.ai.api.response.ResponsePage;
-import cn.laterya.ai.cases.admin.*;
 import cn.laterya.ai.cases.admin.IAdminLLMService;
+import cn.laterya.ai.cases.admin.IAdminOrchestrationService;
 import cn.laterya.ai.domain.admin.model.entity.*;
 import cn.laterya.ai.domain.auth.model.entity.RegisterCommandEntity;
 import cn.laterya.ai.domain.gateway.model.entity.GatewayConfigCommandEntity;
@@ -35,10 +35,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/admin/")
 public class AdminController implements IAdminService {
 
-    @Resource private IAdminGatewayService adminGatewayService;
-    @Resource private IAdminAuthService adminAuthService;
-    @Resource private IAdminProtocolService adminProtocolService;
-    @Resource private IAdminManageService adminManageService;
+    @Resource private IAdminOrchestrationService adminOrchestrationService;
     @Resource private IAdminLLMService adminLLMService;
     @Resource private IProtocolAnalysis protocolAnalysis;
     @Resource private IProtocolStorage protocolStorage;
@@ -49,7 +46,7 @@ public class AdminController implements IAdminService {
     public Response<GatewayConfigResponseDTO> saveGatewayConfig(@RequestBody GatewayConfigRequestDTO.GatewayConfig req) {
         try {
             log.info("保存网关配置 gatewayId:{}", req.getGatewayId());
-            adminGatewayService.saveGatewayConfig(GatewayConfigCommandEntity.builder()
+            adminOrchestrationService.saveGatewayConfig(GatewayConfigCommandEntity.builder()
                     .gatewayConfigVO(GatewayConfigVO.builder()
                             .gatewayId(req.getGatewayId()).gatewayName(req.getGatewayName())
                             .gatewayDesc(req.getGatewayDesc()).version(req.getVersion())
@@ -63,7 +60,7 @@ public class AdminController implements IAdminService {
     public Response<GatewayConfigResponseDTO> saveGatewayToolConfig(@RequestBody GatewayConfigRequestDTO.GatewayToolConfig req) {
         try {
             log.info("保存工具配置 gatewayId:{}", req.getGatewayId());
-            adminGatewayService.saveGatewayToolConfig(GatewayToolConfigCommandEntity.builder()
+            adminOrchestrationService.saveGatewayToolConfig(GatewayToolConfigCommandEntity.builder()
                     .gatewayToolConfigVO(GatewayToolConfigVO.builder()
                             .gatewayId(req.getGatewayId()).toolId(req.getToolId()).toolName(req.getToolName())
                             .toolType(req.getToolType()).toolDescription(req.getToolDescription())
@@ -77,7 +74,7 @@ public class AdminController implements IAdminService {
     public Response<GatewayConfigResponseDTO> saveGatewayProtocol(@RequestBody GatewayConfigRequestDTO.GatewayProtocol req) {
         try {
             log.info("保存协议配置");
-            adminProtocolService.saveGatewayProtocol(toStorageCommand(req.getHttpProtocols()));
+            adminOrchestrationService.saveGatewayProtocol(toStorageCommand(req.getHttpProtocols()));
             return ok();
         } catch (Exception e) { return fail(e, "保存协议配置"); }
     }
@@ -86,7 +83,7 @@ public class AdminController implements IAdminService {
     public Response<GatewayConfigResponseDTO> saveGatewayAuth(@RequestBody GatewayConfigRequestDTO.GatewayAuth req) {
         try {
             log.info("保存鉴权 gatewayId:{}", req.getGatewayId());
-            adminAuthService.saveGatewayAuth(RegisterCommandEntity.builder()
+            adminOrchestrationService.saveGatewayAuth(RegisterCommandEntity.builder()
                     .gatewayId(req.getGatewayId()).rateLimit(req.getRateLimit()).expireTime(req.getExpireTime()).build());
             return ok();
         } catch (Exception e) { return fail(e, "保存鉴权"); }
@@ -130,7 +127,7 @@ public class AdminController implements IAdminService {
     @GetMapping("query_gateway_config_list")
     public Response<List<GatewayConfigDTO>> queryGatewayConfigList() {
         try {
-            List<GatewayConfigEntity> list = adminManageService.queryGatewayConfigList();
+            List<GatewayConfigEntity> list = adminOrchestrationService.queryGatewayConfigList();
             return Response.<List<GatewayConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(list.stream().map(e -> GatewayConfigDTO.builder().gatewayId(e.getGatewayId()).gatewayName(e.getGatewayName())
                             .gatewayDesc(e.getGatewayDesc()).version(e.getVersion()).auth(e.getAuth()).status(e.getStatus()).build())
@@ -141,7 +138,7 @@ public class AdminController implements IAdminService {
     @PostMapping("query_gateway_config_page")
     public ResponsePage<List<GatewayConfigDTO>> queryGatewayConfigPage(@RequestBody GatewayConfigQueryDTO q) {
         try {
-            GatewayConfigPageEntity p = adminManageService.queryGatewayConfigPage(GatewayConfigQueryEntity.builder()
+            GatewayConfigPageEntity p = adminOrchestrationService.queryGatewayConfigPage(GatewayConfigQueryEntity.builder()
                     .gatewayId(q.getGatewayId()).gatewayName(q.getGatewayName()).page(q.getPage()).rows(q.getRows()).build());
             List<GatewayConfigDTO> dtos = p.getDataList().stream().map(e -> GatewayConfigDTO.builder()
                     .gatewayId(e.getGatewayId()).gatewayName(e.getGatewayName()).gatewayDesc(e.getGatewayDesc())
@@ -153,7 +150,7 @@ public class AdminController implements IAdminService {
     @GetMapping("query_gateway_tool_list")
     public Response<List<GatewayToolConfigDTO>> queryGatewayToolList() {
         try {
-            List<GatewayToolConfigEntity> list = adminManageService.queryGatewayToolList();
+            List<GatewayToolConfigEntity> list = adminOrchestrationService.queryGatewayToolList();
             return Response.<List<GatewayToolConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(list.stream().map(this::toToolDTO).collect(Collectors.toList())).build();
         } catch (Exception e) { return failResp(e, "查询工具列表"); }
@@ -162,7 +159,7 @@ public class AdminController implements IAdminService {
     @PostMapping("query_gateway_tool_page")
     public ResponsePage<List<GatewayToolConfigDTO>> queryGatewayToolPage(@RequestBody GatewayToolQueryDTO q) {
         try {
-            GatewayToolPageEntity p = adminManageService.queryGatewayToolPage(GatewayToolQueryEntity.builder()
+            GatewayToolPageEntity p = adminOrchestrationService.queryGatewayToolPage(GatewayToolQueryEntity.builder()
                     .gatewayId(q.getGatewayId()).toolName(q.getToolName()).page(q.getPage()).rows(q.getRows()).build());
             return ResponsePage.<List<GatewayToolConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(p.getDataList().stream().map(this::toToolDTO).collect(Collectors.toList())).total(p.getTotal()).build();
@@ -172,7 +169,7 @@ public class AdminController implements IAdminService {
     @GetMapping("query_gateway_tool_list_by_gateway_id")
     public Response<List<GatewayToolConfigDTO>> queryGatewayToolListByGatewayId(@RequestParam String gatewayId) {
         try {
-            List<GatewayToolConfigEntity> list = adminManageService.queryGatewayToolListByGatewayId(gatewayId);
+            List<GatewayToolConfigEntity> list = adminOrchestrationService.queryGatewayToolListByGatewayId(gatewayId);
             return Response.<List<GatewayToolConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(list.stream().map(this::toToolDTO).collect(Collectors.toList())).build();
         } catch (Exception e) { return failResp(e, "查询网关工具"); }
@@ -182,14 +179,14 @@ public class AdminController implements IAdminService {
     public Response<List<GatewayProtocolDTO>> queryGatewayProtocolList() {
         try {
             return Response.<List<GatewayProtocolDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
-                    .data(adminManageService.queryGatewayProtocolList().stream().map(this::toProtocolDTO).collect(Collectors.toList())).build();
+                    .data(adminOrchestrationService.queryGatewayProtocolList().stream().map(this::toProtocolDTO).collect(Collectors.toList())).build();
         } catch (Exception e) { return failResp(e, "查询协议列表"); }
     }
 
     @PostMapping("query_gateway_protocol_page")
     public ResponsePage<List<GatewayProtocolDTO>> queryGatewayProtocolPage(@RequestBody GatewayProtocolQueryDTO q) {
         try {
-            GatewayProtocolPageEntity p = adminManageService.queryGatewayProtocolPage(GatewayProtocolQueryEntity.builder()
+            GatewayProtocolPageEntity p = adminOrchestrationService.queryGatewayProtocolPage(GatewayProtocolQueryEntity.builder()
                     .protocolId(q.getProtocolId()).httpUrl(q.getHttpUrl()).page(q.getPage()).rows(q.getRows()).build());
             return ResponsePage.<List<GatewayProtocolDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(p.getDataList().stream().map(this::toProtocolDTO).collect(Collectors.toList())).total(p.getTotal()).build();
@@ -200,7 +197,7 @@ public class AdminController implements IAdminService {
     public Response<List<GatewayProtocolDTO>> queryGatewayProtocolListByGatewayId(@RequestParam String gatewayId) {
         try {
             return Response.<List<GatewayProtocolDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
-                    .data(adminManageService.queryGatewayProtocolListByGatewayId(gatewayId).stream().map(this::toProtocolDTO).collect(Collectors.toList())).build();
+                    .data(adminOrchestrationService.queryGatewayProtocolListByGatewayId(gatewayId).stream().map(this::toProtocolDTO).collect(Collectors.toList())).build();
         } catch (Exception e) { return failResp(e, "查询网关协议"); }
     }
 
@@ -208,14 +205,14 @@ public class AdminController implements IAdminService {
     public Response<List<GatewayAuthDTO>> queryGatewayAuthList() {
         try {
             return Response.<List<GatewayAuthDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
-                    .data(adminManageService.queryGatewayAuthList().stream().map(this::toAuthDTO).collect(Collectors.toList())).build();
+                    .data(adminOrchestrationService.queryGatewayAuthList().stream().map(this::toAuthDTO).collect(Collectors.toList())).build();
         } catch (Exception e) { return failResp(e, "查询鉴权列表"); }
     }
 
     @PostMapping("query_gateway_auth_page")
     public ResponsePage<List<GatewayAuthDTO>> queryGatewayAuthPage(@RequestBody GatewayAuthQueryDTO q) {
         try {
-            GatewayAuthPageEntity p = adminManageService.queryGatewayAuthPage(GatewayAuthQueryEntity.builder()
+            GatewayAuthPageEntity p = adminOrchestrationService.queryGatewayAuthPage(GatewayAuthQueryEntity.builder()
                     .gatewayId(q.getGatewayId()).apiKey(q.getApiKey()).page(q.getPage()).rows(q.getRows()).build());
             return ResponsePage.<List<GatewayAuthDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(p.getDataList().stream().map(this::toAuthDTO).collect(Collectors.toList())).total(p.getTotal()).build();
@@ -236,7 +233,7 @@ public class AdminController implements IAdminService {
     public Response<GatewayConfigResponseDTO> deleteGatewayAuth(@RequestParam String gatewayId) {
         try {
             log.info("删除鉴权 gatewayId:{}", gatewayId);
-            adminAuthService.deleteGatewayAuth(gatewayId);
+            adminOrchestrationService.deleteGatewayAuth(gatewayId);
             return ok();
         } catch (Exception e) { return fail(e, "删除鉴权"); }
     }
@@ -245,7 +242,7 @@ public class AdminController implements IAdminService {
     public Response<GatewayConfigResponseDTO> deleteGatewayProtocol(@RequestParam Long protocolId) {
         try {
             log.info("删除协议 protocolId:{}", protocolId);
-            adminProtocolService.deleteGatewayProtocol(protocolId);
+            adminOrchestrationService.deleteGatewayProtocol(protocolId);
             return ok();
         } catch (Exception e) { return fail(e, "删除协议"); }
     }
@@ -255,7 +252,7 @@ public class AdminController implements IAdminService {
     public Response<GatewayConfigResponseDTO> updateGatewayAuth(@RequestParam String gatewayId, @RequestParam Integer rateLimit, @RequestParam(required = false) String expireTime) {
         try {
             log.info("更新鉴权 gatewayId:{} rateLimit:{}", gatewayId, rateLimit);
-            adminAuthService.updateGatewayAuth(gatewayId, rateLimit, expireTime);
+            adminOrchestrationService.updateGatewayAuth(gatewayId, rateLimit, expireTime);
             return ok();
         } catch (Exception e) { return fail(e, "更新鉴权"); }
     }
