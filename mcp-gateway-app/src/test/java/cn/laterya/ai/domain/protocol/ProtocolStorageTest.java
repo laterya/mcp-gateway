@@ -10,13 +10,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.List;
 
 /**
@@ -33,6 +30,7 @@ import java.util.List;
 @Slf4j
 @ActiveProfiles("test")
 @SpringBootTest
+@EnabledIf("cn.laterya.ai.domain.protocol.DemoServerTestSupport#isDemoServerRunning")
 public class ProtocolStorageTest {
 
     @Resource
@@ -43,21 +41,12 @@ public class ProtocolStorageTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private String fetchOpenApiJson() throws Exception {
-        try (HttpClient client = HttpClient.newHttpClient()) {
-            HttpRequest req = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8701/v3/api-docs"))
-                    .GET().build();
-            return client.send(req, HttpResponse.BodyHandlers.ofString()).body();
-        }
-    }
-
     /**
      * 纯 requestBody 接口的解析+存储
      */
     @Test
     public void test_store_requestBody_only() throws Exception {
-        String json = fetchOpenApiJson();
+        String json = DemoServerTestSupport.fetchOpenApiJson();
 
         // 1. 解析
         List<HTTPProtocolVO> vos = protocolAnalysis.doAnalysis(
@@ -82,7 +71,7 @@ public class ProtocolStorageTest {
      */
     @Test
     public void test_store_parameters_only() throws Exception {
-        String json = fetchOpenApiJson();
+        String json = DemoServerTestSupport.fetchOpenApiJson();
 
         List<HTTPProtocolVO> vos = protocolAnalysis.doAnalysis(
                 AnalysisCommandEntity.builder()
@@ -102,7 +91,7 @@ public class ProtocolStorageTest {
      */
     @Test
     public void test_store_requestBody_and_parameters() throws Exception {
-        String json = fetchOpenApiJson();
+        String json = DemoServerTestSupport.fetchOpenApiJson();
 
         List<HTTPProtocolVO> vos = protocolAnalysis.doAnalysis(
                 AnalysisCommandEntity.builder()

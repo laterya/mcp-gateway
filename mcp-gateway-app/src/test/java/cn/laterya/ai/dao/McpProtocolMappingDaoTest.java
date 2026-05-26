@@ -50,7 +50,7 @@ public class McpProtocolMappingDaoTest {
     public void test_queryByProtocolId() {
         List<McpProtocolMappingPO> list = mcpProtocolMappingDao.queryByProtocolId(1L);
         assertFalse(list.isEmpty());
-        assertEquals(5, list.size());
+        assertEquals(14, list.size());
     }
 
     @Test

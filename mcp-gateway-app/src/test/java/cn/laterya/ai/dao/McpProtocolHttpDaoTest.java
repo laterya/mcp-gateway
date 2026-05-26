@@ -51,7 +51,7 @@ public class McpProtocolHttpDaoTest {
     public void test_queryByProtocolId() {
         McpProtocolHttpPO result = mcpProtocolHttpDao.queryByProtocolId(1L);
         assertNotNull(result);
-        assertEquals("http://localhost:8701/api/v1/mcp/get_company_employee", result.getHttpUrl());
+        assertEquals("http://localhost:8701/api/v1/employee/query", result.getHttpUrl());
     }
 
     @Test

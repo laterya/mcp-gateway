@@ -32,6 +32,7 @@ public class McpGatewayDaoTest {
                 .gatewayDesc("DAO测试用")
                 .version("1.0.0")
                 .status(1)
+                .auth(0)
                 .build();
         mcpGatewayDao.insert(po);
         assertNotNull(po.getId());
@@ -46,7 +47,7 @@ public class McpGatewayDaoTest {
     public void test_queryByGatewayId() {
         McpGatewayPO result = mcpGatewayDao.queryByGatewayId("gateway_001");
         assertNotNull(result);
-        assertEquals("员工信息查询网关", result.getGatewayName());
+        assertEquals("员工信息管理网关", result.getGatewayName());
     }
 
     @Test
@@ -81,6 +82,7 @@ public class McpGatewayDaoTest {
                 .gatewayId("test_delete_gateway")
                 .gatewayName("待删除网关")
                 .status(1)
+                .auth(0)
                 .build();
         mcpGatewayDao.insert(po);
         Long id = po.getId();

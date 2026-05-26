@@ -8,13 +8,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.List;
 
 /**
@@ -32,28 +29,19 @@ import java.util.List;
 @Slf4j
 @ActiveProfiles("test")
 @SpringBootTest
+@EnabledIf("cn.laterya.ai.domain.protocol.DemoServerTestSupport#isDemoServerRunning")
 public class ProtocolAnalysisRegressionTest {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final String DEMO_SERVER_API_DOCS = "http://localhost:8701/v3/api-docs";
 
     @Resource
     private IProtocolAnalysis protocolAnalysis;
-
-    /** 拉取 demo-server 的 OpenAPI JSON */
-    private String fetchOpenApiJson() throws Exception {
-        try (HttpClient client = HttpClient.newHttpClient()) {
-            HttpRequest req = HttpRequest.newBuilder().uri(URI.create(DEMO_SERVER_API_DOCS)).GET().build();
-            HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
-            return resp.body();
-        }
-    }
 
     // ==================== 场景1：纯 requestBody ====================
 
     @Test
     public void test_requestBody_only() throws Exception {
-        String json = fetchOpenApiJson();
+        String json = DemoServerTestSupport.fetchOpenApiJson();
 
         AnalysisCommandEntity command = AnalysisCommandEntity.builder()
                 .type(AnalysisTypeEnum.swagger)
@@ -75,7 +63,7 @@ public class ProtocolAnalysisRegressionTest {
 
     @Test
     public void test_parameters_only() throws Exception {
-        String json = fetchOpenApiJson();
+        String json = DemoServerTestSupport.fetchOpenApiJson();
 
         AnalysisCommandEntity command = AnalysisCommandEntity.builder()
                 .type(AnalysisTypeEnum.swagger)
@@ -100,7 +88,7 @@ public class ProtocolAnalysisRegressionTest {
 
     @Test
     public void test_requestBody_and_parameters_coexist() throws Exception {
-        String json = fetchOpenApiJson();
+        String json = DemoServerTestSupport.fetchOpenApiJson();
 
         AnalysisCommandEntity command = AnalysisCommandEntity.builder()
                 .type(AnalysisTypeEnum.swagger)
@@ -132,7 +120,7 @@ public class ProtocolAnalysisRegressionTest {
 
     @Test
     public void test_path_parameter() throws Exception {
-        String json = fetchOpenApiJson();
+        String json = DemoServerTestSupport.fetchOpenApiJson();
 
         AnalysisCommandEntity command = AnalysisCommandEntity.builder()
                 .type(AnalysisTypeEnum.swagger)

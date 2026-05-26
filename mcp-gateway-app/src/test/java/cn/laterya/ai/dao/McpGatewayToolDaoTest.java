@@ -49,14 +49,14 @@ public class McpGatewayToolDaoTest {
     public void test_queryByGatewayId() {
         List<McpGatewayToolPO> list = mcpGatewayToolDao.queryByGatewayId("gateway_001");
         assertFalse(list.isEmpty());
-        assertEquals("JavaSDKMCPClient_getCompanyEmployee", list.get(0).getToolName());
+        assertTrue(list.stream().anyMatch(t -> "queryEmployees".equals(t.getToolName())));
     }
 
     @Test
     public void test_queryByGatewayIdAndToolName() {
-        McpGatewayToolPO result = mcpGatewayToolDao.queryByGatewayIdAndToolName("gateway_001", "JavaSDKMCPClient_getCompanyEmployee");
+        McpGatewayToolPO result = mcpGatewayToolDao.queryByGatewayIdAndToolName("gateway_001", "queryEmployees");
         assertNotNull(result);
-        assertEquals("获取公司雇员信息", result.getToolDescription());
+        assertEquals("查询员工列表，支持按城市、部门、关键词筛选", result.getToolDescription());
         assertEquals(1L, result.getProtocolId());
     }
 
@@ -74,7 +74,7 @@ public class McpGatewayToolDaoTest {
 
     @Test
     public void test_update() {
-        McpGatewayToolPO existing = mcpGatewayToolDao.queryByGatewayIdAndToolName("gateway_001", "JavaSDKMCPClient_getCompanyEmployee");
+        McpGatewayToolPO existing = mcpGatewayToolDao.queryByGatewayIdAndToolName("gateway_001", "queryEmployees");
         assertNotNull(existing);
 
         existing.setToolDescription("更新后的描述");
