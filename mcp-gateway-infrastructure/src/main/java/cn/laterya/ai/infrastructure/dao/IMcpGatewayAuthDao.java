@@ -24,4 +24,6 @@ public interface IMcpGatewayAuthDao {
 
     List<McpGatewayAuthPO> queryAll();
 
+    void deleteByGatewayId(String gatewayId);
+
 }

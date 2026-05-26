@@ -10,4 +10,5 @@ public interface IAuthRepository {
     void insert(McpGatewayAuthVO mcpGatewayAuthVO);
     AuthStatusEnum.GatewayConfig queryGatewayAuthStatus(String gatewayId);
     void updateAuth(String gatewayId, Integer rateLimit, java.time.LocalDateTime expireTime);
+    void deleteByGatewayId(String gatewayId);
 }

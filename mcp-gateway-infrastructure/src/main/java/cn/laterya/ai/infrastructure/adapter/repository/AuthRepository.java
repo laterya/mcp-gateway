@@ -51,4 +51,10 @@ public class AuthRepository implements IAuthRepository {
         mcpGatewayAuthDao.updateById(existing);
         log.info("更新鉴权 gatewayId:{} rateLimit:{}", gatewayId, rateLimit);
     }
+
+    @Override
+    public void deleteByGatewayId(String gatewayId) {
+        mcpGatewayAuthDao.deleteByGatewayId(gatewayId);
+        log.info("删除鉴权 gatewayId:{}", gatewayId);
+    }
 }
