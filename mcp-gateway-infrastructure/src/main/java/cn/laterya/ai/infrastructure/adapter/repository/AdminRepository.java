@@ -32,14 +32,14 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     public GatewayConfigPageEntity queryGatewayConfigPage(GatewayConfigQueryEntity q) {
-        List<McpGatewayPO> all = mcpGatewayDao.queryAll();
-        long total = all.size();
         int page = q.getPage() != null ? q.getPage() : 1;
         int rows = q.getRows() != null ? q.getRows() : 10;
-        int from = (page - 1) * rows;
-        List<GatewayConfigEntity> list = all.stream().skip(from).limit(rows).map(po -> GatewayConfigEntity.builder()
-                .gatewayId(po.getGatewayId()).gatewayName(po.getGatewayName()).gatewayDesc(po.getGatewayDesc())
-                .version(po.getVersion()).auth(po.getAuth()).status(po.getStatus()).build()).collect(Collectors.toList());
+        int offset = (page - 1) * rows;
+        long total = mcpGatewayDao.queryCount(q.getGatewayId(), q.getGatewayName());
+        List<GatewayConfigEntity> list = mcpGatewayDao.queryPage(q.getGatewayId(), q.getGatewayName(), rows, offset)
+                .stream().map(po -> GatewayConfigEntity.builder()
+                        .gatewayId(po.getGatewayId()).gatewayName(po.getGatewayName()).gatewayDesc(po.getGatewayDesc())
+                        .version(po.getVersion()).auth(po.getAuth()).status(po.getStatus()).build()).collect(Collectors.toList());
         return GatewayConfigPageEntity.builder().dataList(list).total(total).build();
     }
 
@@ -53,14 +53,15 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     public GatewayToolPageEntity queryGatewayToolPage(GatewayToolQueryEntity q) {
-        List<McpGatewayToolPO> all = mcpGatewayToolDao.queryAll();
-        long total = all.size();
         int page = q.getPage() != null ? q.getPage() : 1;
         int rows = q.getRows() != null ? q.getRows() : 10;
-        List<GatewayToolConfigEntity> list = all.stream().skip((page - 1) * rows).limit(rows).map(po -> GatewayToolConfigEntity.builder()
-                .gatewayId(po.getGatewayId()).toolId(po.getToolId()).toolName(po.getToolName()).toolType(po.getToolType())
-                .toolDescription(po.getToolDescription()).toolVersion(po.getToolVersion())
-                .protocolId(po.getProtocolId()).protocolType(po.getProtocolType()).build()).collect(Collectors.toList());
+        int offset = (page - 1) * rows;
+        long total = mcpGatewayToolDao.queryCount(q.getGatewayId(), q.getToolName());
+        List<GatewayToolConfigEntity> list = mcpGatewayToolDao.queryPage(q.getGatewayId(), q.getToolName(), rows, offset)
+                .stream().map(po -> GatewayToolConfigEntity.builder()
+                        .gatewayId(po.getGatewayId()).toolId(po.getToolId()).toolName(po.getToolName()).toolType(po.getToolType())
+                        .toolDescription(po.getToolDescription()).toolVersion(po.getToolVersion())
+                        .protocolId(po.getProtocolId()).protocolType(po.getProtocolType()).build()).collect(Collectors.toList());
         return GatewayToolPageEntity.builder().dataList(list).total(total).build();
     }
 
@@ -89,11 +90,23 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     public GatewayProtocolPageEntity queryGatewayProtocolPage(GatewayProtocolQueryEntity q) {
-        List<GatewayProtocolConfigEntity> all = queryGatewayProtocolList();
-        long total = all.size();
         int page = q.getPage() != null ? q.getPage() : 1;
         int rows = q.getRows() != null ? q.getRows() : 10;
-        return GatewayProtocolPageEntity.builder().dataList(all.stream().skip((page - 1) * rows).limit(rows).collect(Collectors.toList())).total(total).build();
+        int offset = (page - 1) * rows;
+        long total = protocolHttpDao.queryCount(q.getProtocolId(), q.getHttpUrl());
+        List<GatewayProtocolConfigEntity> list = protocolHttpDao.queryPage(q.getProtocolId(), q.getHttpUrl(), rows, offset)
+                .stream().map(po -> {
+                    List<McpProtocolMappingPO> mappings = protocolMappingDao.queryByProtocolId(po.getProtocolId());
+                    return GatewayProtocolConfigEntity.builder()
+                            .protocolId(po.getProtocolId()).httpUrl(po.getHttpUrl()).httpMethod(po.getHttpMethod())
+                            .httpHeaders(po.getHttpHeaders()).timeout(po.getTimeout())
+                            .mappings(mappings == null ? null : mappings.stream().map(m -> GatewayProtocolConfigEntity.ProtocolMappingEntity.builder()
+                                    .mappingType(m.getMappingType()).parentPath(m.getParentPath()).fieldName(m.getFieldName())
+                                    .mcpPath(m.getMcpPath()).mcpType(m.getMcpType()).mcpDesc(m.getMcpDesc())
+                                    .isRequired(m.getIsRequired()).sortOrder(m.getSortOrder()).build()).collect(Collectors.toList()))
+                            .build();
+                }).collect(Collectors.toList());
+        return GatewayProtocolPageEntity.builder().dataList(list).total(total).build();
     }
 
     @Override
@@ -123,13 +136,14 @@ public class AdminRepository implements IAdminRepository {
 
     @Override
     public GatewayAuthPageEntity queryGatewayAuthPage(GatewayAuthQueryEntity q) {
-        List<McpGatewayAuthPO> all = mcpGatewayAuthDao.queryAll();
-        long total = all.size();
         int page = q.getPage() != null ? q.getPage() : 1;
         int rows = q.getRows() != null ? q.getRows() : 10;
-        List<GatewayAuthConfigEntity> list = all.stream().skip((page - 1) * rows).limit(rows).map(po -> GatewayAuthConfigEntity.builder()
-                .gatewayId(po.getGatewayId()).apiKey(po.getApiKey()).rateLimit(po.getRateLimit())
-                .expireTime(po.getExpireTime()).build()).collect(Collectors.toList());
+        int offset = (page - 1) * rows;
+        long total = mcpGatewayAuthDao.queryCount(q.getGatewayId(), q.getApiKey());
+        List<GatewayAuthConfigEntity> list = mcpGatewayAuthDao.queryPage(q.getGatewayId(), q.getApiKey(), rows, offset)
+                .stream().map(po -> GatewayAuthConfigEntity.builder()
+                        .gatewayId(po.getGatewayId()).apiKey(po.getApiKey()).rateLimit(po.getRateLimit())
+                        .expireTime(po.getExpireTime()).build()).collect(Collectors.toList());
         return GatewayAuthPageEntity.builder().dataList(list).total(total).build();
     }
 

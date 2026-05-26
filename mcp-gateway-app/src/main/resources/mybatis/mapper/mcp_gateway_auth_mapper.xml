@@ -50,4 +50,22 @@
         SELECT * FROM mcp_gateway_auth
     </select>
 
+    <select id="queryPage" resultMap="mcpGatewayAuthMap">
+        SELECT * FROM mcp_gateway_auth
+        <where>
+            <if test="gatewayId != null and gatewayId != ''">AND gateway_id = #{gatewayId}</if>
+            <if test="apiKey != null and apiKey != ''">AND api_key LIKE CONCAT('%', #{apiKey}, '%')</if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="queryCount" resultType="long">
+        SELECT COUNT(*) FROM mcp_gateway_auth
+        <where>
+            <if test="gatewayId != null and gatewayId != ''">AND gateway_id = #{gatewayId}</if>
+            <if test="apiKey != null and apiKey != ''">AND api_key LIKE CONCAT('%', #{apiKey}, '%')</if>
+        </where>
+    </select>
+
 </mapper>

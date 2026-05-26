@@ -2,6 +2,7 @@ package cn.laterya.ai.infrastructure.dao;
 
 import cn.laterya.ai.infrastructure.dao.po.McpProtocolHttpPO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -21,5 +22,10 @@ public interface IMcpProtocolHttpDao {
     List<McpProtocolHttpPO> queryAll();
 
     int deleteByProtocolId(Long protocolId);
+
+    List<McpProtocolHttpPO> queryPage(@Param("protocolId") Long protocolId, @Param("httpUrl") String httpUrl,
+                                      @Param("limit") int limit, @Param("offset") int offset);
+
+    long queryCount(@Param("protocolId") Long protocolId, @Param("httpUrl") String httpUrl);
 
 }

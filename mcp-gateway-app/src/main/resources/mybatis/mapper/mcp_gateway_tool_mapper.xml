@@ -53,4 +53,22 @@
         WHERE gateway_id = #{gatewayId}
     </update>
 
+    <select id="queryPage" resultMap="mcpGatewayToolMap">
+        SELECT * FROM mcp_gateway_tool
+        <where>
+            <if test="gatewayId != null and gatewayId != ''">AND gateway_id = #{gatewayId}</if>
+            <if test="toolName != null and toolName != ''">AND tool_name LIKE CONCAT('%', #{toolName}, '%')</if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="queryCount" resultType="long">
+        SELECT COUNT(*) FROM mcp_gateway_tool
+        <where>
+            <if test="gatewayId != null and gatewayId != ''">AND gateway_id = #{gatewayId}</if>
+            <if test="toolName != null and toolName != ''">AND tool_name LIKE CONCAT('%', #{toolName}, '%')</if>
+        </where>
+    </select>
+
 </mapper>

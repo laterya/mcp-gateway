@@ -2,6 +2,7 @@ package cn.laterya.ai.infrastructure.dao;
 
 import cn.laterya.ai.infrastructure.dao.po.McpGatewayAuthPO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -23,5 +24,10 @@ public interface IMcpGatewayAuthDao {
     int queryEffectiveGatewayAuthCount(String gatewayId);
 
     List<McpGatewayAuthPO> queryAll();
+
+    List<McpGatewayAuthPO> queryPage(@Param("gatewayId") String gatewayId, @Param("apiKey") String apiKey,
+                                     @Param("limit") int limit, @Param("offset") int offset);
+
+    long queryCount(@Param("gatewayId") String gatewayId, @Param("apiKey") String apiKey);
 
 }

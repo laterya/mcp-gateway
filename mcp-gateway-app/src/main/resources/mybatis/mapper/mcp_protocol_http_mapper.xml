@@ -47,4 +47,22 @@
         DELETE FROM mcp_protocol_http WHERE protocol_id = #{protocolId}
     </delete>
 
+    <select id="queryPage" resultMap="mcpProtocolHttpMap">
+        SELECT * FROM mcp_protocol_http
+        <where>
+            <if test="protocolId != null">AND protocol_id = #{protocolId}</if>
+            <if test="httpUrl != null and httpUrl != ''">AND http_url LIKE CONCAT('%', #{httpUrl}, '%')</if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="queryCount" resultType="long">
+        SELECT COUNT(*) FROM mcp_protocol_http
+        <where>
+            <if test="protocolId != null">AND protocol_id = #{protocolId}</if>
+            <if test="httpUrl != null and httpUrl != ''">AND http_url LIKE CONCAT('%', #{httpUrl}, '%')</if>
+        </where>
+    </select>
+
 </mapper>
