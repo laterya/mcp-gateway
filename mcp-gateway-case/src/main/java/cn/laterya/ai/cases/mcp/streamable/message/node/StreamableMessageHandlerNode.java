@@ -1,7 +1,7 @@
-package cn.laterya.ai.cases.mcp.message.node;
+package cn.laterya.ai.cases.mcp.streamable.message.node;
 
-import cn.laterya.ai.cases.mcp.message.AbstractMessageChainNode;
-import cn.laterya.ai.cases.mcp.message.MessageChainContext;
+import cn.laterya.ai.cases.mcp.streamable.message.AbstractStreamableMessageChainNode;
+import cn.laterya.ai.cases.mcp.streamable.message.StreamableMessageChainContext;
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
@@ -14,11 +14,11 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Component;
 
 /**
- * 消息处理终端节点 —— 调用 domain 层处理消息，通过 SSE 推送响应
+ * Streamable HTTP — 消息处理终端节点（处理消息 + Sink 推送）
  */
 @Slf4j
-@Component
-public class MessageHandlerNode extends AbstractMessageChainNode {
+@Component("streamableMessageHandlerNode")
+public class StreamableMessageHandlerNode extends AbstractStreamableMessageChainNode {
 
     @Resource
     private ISessionMessageService sessionMessageService;
@@ -26,9 +26,9 @@ public class MessageHandlerNode extends AbstractMessageChainNode {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, MessageChainContext context) {
+    protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, StreamableMessageChainContext context) {
         try {
-            log.info("消息处理 mcp message MessageHandlerNode gatewayId:{}", command.getGatewayId());
+            log.info("Streamable HTTP 消息处理 MessageHandlerNode gatewayId:{}", command.getGatewayId());
 
             McpSchemaVO.JSONRPCResponse jsonrpcResponse =
                     sessionMessageService.processHandlerMessage(command.getGatewayId(), command.getJsonrpcMessage());
@@ -44,7 +44,7 @@ public class MessageHandlerNode extends AbstractMessageChainNode {
 
             return ResponseEntity.accepted().build();
         } catch (Exception e) {
-            log.error("消息处理失败 gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId(), e);
+            log.error("Streamable HTTP 消息处理失败 gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId(), e);
             return ResponseEntity.internalServerError().build();
         }
     }

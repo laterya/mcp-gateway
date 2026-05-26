@@ -1,12 +1,12 @@
-package cn.laterya.ai.cases.mcp;
+package cn.laterya.ai.cases.mcp.sse;
 
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import org.springframework.http.ResponseEntity;
 
 /**
- * MCP 消息处理编排接口 —— case 层
+ * SSE 传输 — 消息处理编排接口
  */
-public interface IMcpMessageService {
+public interface IMcpSseMessageService {
 
     ResponseEntity<Void> handleMessage(HandleMessageCommandEntity commandEntity) throws Exception;
 

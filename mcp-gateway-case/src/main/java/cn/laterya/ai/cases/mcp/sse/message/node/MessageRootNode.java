@@ -1,7 +1,7 @@
-package cn.laterya.ai.cases.mcp.message.node;
+package cn.laterya.ai.cases.mcp.sse.message.node;
 
-import cn.laterya.ai.cases.mcp.message.AbstractMessageChainNode;
-import cn.laterya.ai.cases.mcp.message.MessageChainContext;
+import cn.laterya.ai.cases.mcp.sse.message.AbstractMessageChainNode;
+import cn.laterya.ai.cases.mcp.sse.message.MessageChainContext;
 import cn.laterya.ai.domain.auth.model.entity.RateLimitCommandEntity;
 import cn.laterya.ai.domain.auth.service.IAuthRateLimitService;
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
@@ -15,10 +15,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 /**
- * 消息处理根节点 —— 限流检查 + 日志记录 + 异常兜底
+ * SSE 传输 — 消息处理根节点（限流 + 异常兜底）
  */
 @Slf4j
-@Component
+@Component("sseMessageRootNode")
 public class MessageRootNode extends AbstractMessageChainNode {
 
     @Resource
@@ -29,7 +29,6 @@ public class MessageRootNode extends AbstractMessageChainNode {
         try {
             log.info("消息处理 mcp message RootNode gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId());
 
-            // 仅对工具调用做限流，其他方法（initialize、tools/list）不限流
             if (command.getJsonrpcMessage() instanceof McpSchemaVO.JSONRPCRequest request) {
                 SessionMessageHandlerMethodEnum methodEnum = SessionMessageHandlerMethodEnum.getByMethod(request.method());
                 if (SessionMessageHandlerMethodEnum.TOOLS_CALL.equals(methodEnum)) {

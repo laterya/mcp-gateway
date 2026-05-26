@@ -1,7 +1,7 @@
-package cn.laterya.ai.cases.mcp.chain.node;
+package cn.laterya.ai.cases.mcp.sse.chain.node;
 
-import cn.laterya.ai.cases.mcp.chain.AbstractSessionChainNode;
-import cn.laterya.ai.cases.mcp.chain.SessionChainContext;
+import cn.laterya.ai.cases.mcp.sse.chain.AbstractSessionChainNode;
+import cn.laterya.ai.cases.mcp.sse.chain.SessionChainContext;
 import cn.laterya.ai.domain.auth.model.entity.LicenseCommandEntity;
 import cn.laterya.ai.domain.auth.service.IAuthLicenseService;
 import cn.laterya.ai.types.enums.McpErrorCodes;
@@ -13,10 +13,10 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 /**
- * 鉴权节点 —— 校验 api_key 是否有效
+ * SSE 传输 — 鉴权节点
  */
 @Slf4j
-@Component
+@Component("sseVerifyNode")
 public class VerifyNode extends AbstractSessionChainNode {
 
     @Resource

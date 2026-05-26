@@ -53,7 +53,7 @@ public class SessionManagementService implements ISessionManagementService {
     }
 
     /**
-     * 创建会话
+     * 创建会话（SSE 传输）
      *
      * <p>流程：生成 sessionId → 创建多播 Sink → 推送 endpoint 事件 → 存入活跃表
      *
@@ -62,6 +62,34 @@ public class SessionManagementService implements ISessionManagementService {
      */
     @Override
     public SessionConfigVO createSession(String gatewayId, String apiKey) {
+        SessionConfigVO sessionConfigVO = doCreateSession(gatewayId);
+
+        // SSE 协议需要推送 endpoint 事件告知客户端消息地址
+        // api_key 拼入 URL，客户端 POST 回调时自动携带，用于后续限流校验
+        String messageEndpoint = "/api-gateway/" + gatewayId + "/mcp/sse?sessionId=" + sessionConfigVO.getSessionId();
+        if (apiKey != null && !apiKey.isEmpty()) {
+            messageEndpoint += "&api_key=" + apiKey;
+        }
+        sessionConfigVO.getSink().tryEmitNext(ServerSentEvent.<String>builder()
+                .event("endpoint")
+                .data(messageEndpoint)
+                .build());
+
+        return sessionConfigVO;
+    }
+
+    /**
+     * 创建会话（Streamable HTTP 传输）
+     *
+     * <p>仅创建会话和 Sink，不推送 endpoint 事件。
+     * Streamable HTTP 的会话 ID 通过 Mcp-Session-Id 响应头传递给客户端。
+     */
+    @Override
+    public SessionConfigVO createSession(String gatewayId) {
+        return doCreateSession(gatewayId);
+    }
+
+    private SessionConfigVO doCreateSession(String gatewayId) {
         log.info("创建会话 gatewayId:{}", gatewayId);
 
         String sessionId = UUID.randomUUID().toString();
@@ -69,19 +97,7 @@ public class SessionManagementService implements ISessionManagementService {
         // multicast + onBackpressureBuffer：支持多订阅者，缓冲慢消费客户端的数据
         Sinks.Many<ServerSentEvent<String>> sink = Sinks.many().multicast().onBackpressureBuffer();
 
-        // 推送 endpoint 事件——这是 SSE 协议的第一条消息，告知客户端消息请求地址
-        // api_key 拼入 URL，客户端 POST 回调时自动携带，用于后续限流校验
-        String messageEndpoint = "/api-gateway/" + gatewayId + "/mcp/sse?sessionId=" + sessionId;
-        if (apiKey != null && !apiKey.isEmpty()) {
-            messageEndpoint += "&api_key=" + apiKey;
-        }
-        sink.tryEmitNext(ServerSentEvent.<String>builder()
-                .event("endpoint")
-                .data(messageEndpoint)
-                .build());
-
         SessionConfigVO sessionConfigVO = new SessionConfigVO(sessionId, sink);
-
         activeSessions.put(sessionId, sessionConfigVO);
 
         log.info("创建会话 gatewayId:{} sessionId:{},当前活跃会话数:{}", gatewayId, sessionId, activeSessions.size());

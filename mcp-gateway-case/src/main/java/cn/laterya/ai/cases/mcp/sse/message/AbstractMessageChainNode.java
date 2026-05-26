@@ -1,13 +1,10 @@
-package cn.laterya.ai.cases.mcp.message;
+package cn.laterya.ai.cases.mcp.sse.message;
 
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import org.springframework.http.ResponseEntity;
 
 /**
- * 消息编排链抽象节点 —— 责任链模式
- *
- * <p>与 Session 编排链（AbstractSessionChainNode）同模式，独立维护。
- * 消息处理的链路：MessageRootNode → MessageSessionNode → MessageHandlerNode
+ * SSE 传输 — 消息编排链抽象节点
  */
 public abstract class AbstractMessageChainNode {
 

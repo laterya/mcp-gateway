@@ -1,8 +1,8 @@
 package cn.laterya.ai.trigger.http;
 
 import cn.laterya.ai.api.IMcpGatewayService;
-import cn.laterya.ai.cases.mcp.IMcpMessageService;
-import cn.laterya.ai.cases.mcp.IMcpSessionService;
+import cn.laterya.ai.cases.mcp.sse.IMcpSseMessageService;
+import cn.laterya.ai.cases.mcp.sse.IMcpSseSessionService;
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import cn.laterya.ai.types.enums.ResponseCode;
 import cn.laterya.ai.types.exception.AppException;
@@ -17,20 +17,13 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * MCP 网关控制器 —— trigger 层
- *
- * <p>职责（只做接口封装，不含业务逻辑）：
- * 1. 日志打印
- * 2. 参数校验
- * 3. 调用 case/domain 层
- * 4. 通过 SSE Sink 推送响应
+ * MCP 网关控制器 — SSE 传输（trigger 层）
  *
  * <p>SSE 双通道设计：
  * <ul>
  *   <li>GET /{gatewayId}/mcp/sse?api_key=xxx → 建立 SSE 流（服务端推送通道）</li>
  *   <li>POST /{gatewayId}/mcp/sse?sessionId=xxx&api_key=xxx → 客户端发送消息（请求通道）</li>
  * </ul>
- * 客户端 POST 的响应不是通过 HTTP 返回，而是通过同一个 SSE Sink 推送回去。
  */
 @Slf4j
 @RestController
@@ -39,11 +32,11 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/")
 public class McpGatewayController implements IMcpGatewayService {
 
-    @Resource
-    private IMcpSessionService mcpSessionService;
+    @Resource(name = "sseMcpSessionService")
+    private IMcpSseSessionService mcpSessionService;
 
-    @Resource
-    private IMcpMessageService mcpMessageService;
+    @Resource(name = "sseMcpMessageService")
+    private IMcpSseMessageService mcpMessageService;
 
     @Override
     @GetMapping(value = "{gatewayId}/mcp/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

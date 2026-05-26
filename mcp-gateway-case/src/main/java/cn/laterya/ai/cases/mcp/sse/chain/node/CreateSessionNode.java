@@ -1,7 +1,7 @@
-package cn.laterya.ai.cases.mcp.chain.node;
+package cn.laterya.ai.cases.mcp.sse.chain.node;
 
-import cn.laterya.ai.cases.mcp.chain.AbstractSessionChainNode;
-import cn.laterya.ai.cases.mcp.chain.SessionChainContext;
+import cn.laterya.ai.cases.mcp.sse.chain.AbstractSessionChainNode;
+import cn.laterya.ai.cases.mcp.sse.chain.SessionChainContext;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 import cn.laterya.ai.domain.session.service.ISessionManagementService;
 import jakarta.annotation.Resource;
@@ -11,13 +11,10 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 /**
- * 创建会话节点 —— 调用 domain 层创建会话，结果写入上下文
- *
- * <p>这是编排的核心：将 domain 层的 ISessionManagementService.createSession()
- * 编排进链路。上下文像"流水线托盘"，把创建好的会话配置传递给下游节点。
+ * SSE 传输 — 创建会话节点
  */
 @Slf4j
-@Component
+@Component("sseCreateSessionNode")
 public class CreateSessionNode extends AbstractSessionChainNode {
 
     @Resource
@@ -27,6 +24,7 @@ public class CreateSessionNode extends AbstractSessionChainNode {
     protected Flux<ServerSentEvent<String>> doHandle(String gatewayId, SessionChainContext context) {
         log.info("创建会话 gatewayId:{}", gatewayId);
 
+        // SSE 传输使用带 apiKey 的重载，会推送 endpoint 事件
         SessionConfigVO sessionConfigVO = sessionManagementService.createSession(gatewayId, context.getApiKey());
         context.setSessionConfigVO(sessionConfigVO);
 

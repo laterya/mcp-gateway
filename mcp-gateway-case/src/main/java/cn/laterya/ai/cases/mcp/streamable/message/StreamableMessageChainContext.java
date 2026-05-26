@@ -1,4 +1,4 @@
-package cn.laterya.ai.cases.mcp.message;
+package cn.laterya.ai.cases.mcp.streamable.message;
 
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 import lombok.AllArgsConstructor;
@@ -7,13 +7,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 消息编排链上下文 —— 在各节点间传递的可变状态
+ * Streamable HTTP — 消息编排链上下文
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class MessageChainContext {
+public class StreamableMessageChainContext {
 
     private SessionConfigVO sessionConfigVO;
 
