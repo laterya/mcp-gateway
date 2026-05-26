@@ -138,3 +138,17 @@ Client POST /{gatewayId}/mcp/sse?sessionId=xxx
 - **SSE 端点 URL 拼接**：`server.servlet.context-path` 已含前导 `/`（如 `/api-gateway`），拼接路径时不要再额外加 `/`
 - **LLM 默认模型**：application.yml 中 `OPENAI_MODEL` 默认值为 `gpt-5.2`
 - **Docker MySQL 连接**：`docker exec mcp-gateway-mysql mysql -u root -p123456 mcp_gateway`，密码 `123456`
+
+## Agent skills
+
+### Issue tracker
+
+Issue 跟踪使用 GitHub Issues（laterya/mcp-gateway），通过 `gh` CLI 操作。详见 `docs/agents/issue-tracker.md`。
+
+### Triage labels
+
+五个标准分流角色，使用默认标签名。详见 `docs/agents/triage-labels.md`。
+
+### Domain docs
+
+单上下文布局 — 仓库根目录一个 `CONTEXT.md` + `docs/adr/`。详见 `docs/agents/domain.md`。
