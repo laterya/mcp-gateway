@@ -8,7 +8,7 @@
 - Maven 多模块 + Lombok + Project Reactor
 - MyBatis 3.0 + MySQL 8.0（DAO 层）
 - Guava 33.4（RateLimiter 令牌桶）+ Apache Commons Lang3（API Key 生成）+ Jackson（JSON 解析）
-- SSE（Server-Sent Events）作为 MCP 传输协议
+- SSE + Streamable HTTP 双 MCP 传输协议（SSE 为旧版，Streamable 为 MCP 2025 推荐）
 - Spring AI 1.1.2（OpenAiChatModel + MCP Client SSE Transport，domain/llm 限界上下文）
 
 ## Commands
@@ -109,6 +109,17 @@ Client POST /{gatewayId}/mcp/sse?sessionId=xxx
 会话超时(30min) / 断开 → removeSession() 清理
 ```
 
+## MCP Streamable HTTP Protocol Flow
+
+```
+POST /{gatewayId}/mcp — 无 Mcp-Session-Id + initialize → 创建会话，返回 JSON-RPC + Mcp-Session-Id header
+POST /{gatewayId}/mcp — 有 Mcp-Session-Id → 处理消息，响应通过 Sink 推送，返回 202 Accepted
+GET  /{gatewayId}/mcp — 有 Mcp-Session-Id → 打开 SSE 监听流（60s 心跳），接收服务端推送
+DELETE /{gatewayId}/mcp — 有 Mcp-Session-Id → 关闭会话
+```
+
+与 SSE 的核心区别：SSE 用双端点 + URL query 传 sessionId；Streamable 用单端点 + Mcp-Session-Id header。
+
 ## Code Conventions
 
 - DI 使用 `@Resource`（非 `@Autowired`）；Handler Bean 用 `@Service("beanName")` 命名注册
@@ -126,11 +137,13 @@ Client POST /{gatewayId}/mcp/sse?sessionId=xxx
 - **会话编排责任链**：`RootNode → VerifyNode(AuthLicenseService鉴权) → CreateSessionNode → SseResponseNode`，在 case 层组装
 - **消息编排责任链**：`MessageRootNode(AuthRateLimitService限流) → MessageSessionNode → MessageHandlerNode`，在 case 层组装
 - **泛型责任链框架**：`AbstractChainRouter<T, D, R>`（三泛型：请求类型、上下文、返回类型），位于 `cases/mcp/chain/`。SSE 和 Streamable 共享统一上下文 `SessionChainContext`/`MessageChainContext`，各传输的抽象基类（如 `AbstractSessionChainNode`）继承泛型框架并指定具体类型参数
+- **Streamable HTTP 会话链**：`StreamableRootNode → StreamableVerifyNode → StreamableCreateSessionNode → StreamableInitResponseNode`，结果通过 SessionChainContext 返回（非 Flux），终端节点构建 initialize 响应
+- **Streamable HTTP 消息链**：`StreamableMessageRootNode → StreamableMessageSessionNode → StreamableMessageHandlerNode`，与 SSE 消息链逻辑一致，响应通过 Sink 推送 + 返回 202 Accepted
 - **HTTP 客户端配置位置**：`GenericHttpGateway`（Retrofit2 接口）和 `HTTPClientConfig`（OkHttp 连接池）都在 infrastructure 模块
 - **消息路由使用策略模式**：`SessionMessageService` 通过 `Map<String, IRequestHandler>` 自动注入，按 method 字段分发
 - **JSON-RPC 消息类型**：`McpSchemaVO` 使用 sealed interface + record（JDK 21 特性）
-- **api_key 传播机制**：`createSession()` 将 api_key 拼入 endpoint 事件的 URL，客户端 POST 回调时自动携带，这是限流能工作的关键
-- **鉴权与限流分离**：鉴权在 SSE 连接时（VerifyNode 调 AuthLicenseService），限流在消息处理时（MessageRootNode 仅对 TOOLS_CALL 调 AuthRateLimitService）
+- **api_key 传播机制**：SSE 传输中 `createSession()` 将 api_key 拼入 endpoint 事件的 URL，客户端 POST 回调时自动携带；Streamable 传输中 api_key 通过 POST 参数传递，限流依赖此机制
+- **鉴权与限流分离**：鉴权在会话创建时（VerifyNode 调 AuthLicenseService），限流在消息处理时（MessageRootNode 仅对 TOOLS_CALL 调 AuthRateLimitService）。SSE 和 Streamable 的 VerifyNode 是独立 Bean（共享会导致 `linkWith()` 的 `next` 指针互相覆盖）
 - **AuthRateLimitService 异常策略**：IllegalStateException（无配置）→ 放行，IllegalArgumentException（配置无效）→ 限流
 - **Gateway save upsert**：`saveGatewayConfig` 先查 `queryByGatewayId`，存在则 `updateById`，不存在则 `insert`——编辑弹窗复用 save 端点
 - **case 层不依赖 infrastructure**：case 只调 domain Port 接口（如 `IAuthRepository`），不能直接注入 DAO。之前违反此规则（AdminAuthService 直接注 DAO）已修正
