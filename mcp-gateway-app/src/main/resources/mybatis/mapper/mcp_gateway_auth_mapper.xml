@@ -50,4 +50,8 @@
         SELECT * FROM mcp_gateway_auth
     </select>
 
+    <delete id="deleteByGatewayId">
+        DELETE FROM mcp_gateway_auth WHERE gateway_id = #{gatewayId}
+    </delete>
+
 </mapper>

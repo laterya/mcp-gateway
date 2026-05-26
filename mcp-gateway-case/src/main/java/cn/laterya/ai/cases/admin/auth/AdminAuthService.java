@@ -21,7 +21,7 @@ public class AdminAuthService implements IAdminAuthService {
     public void saveGatewayAuth(RegisterCommandEntity commandEntity) { authRegisterService.register(commandEntity); }
 
     @Override
-    public void deleteGatewayAuth(String gatewayId) { log.info("删除网关鉴权 gatewayId:{}", gatewayId); }
+    public void deleteGatewayAuth(String gatewayId) { authRepository.deleteByGatewayId(gatewayId); }
 
     @Override
     public void updateGatewayAuth(String gatewayId, Integer rateLimit, String expireTime) {
