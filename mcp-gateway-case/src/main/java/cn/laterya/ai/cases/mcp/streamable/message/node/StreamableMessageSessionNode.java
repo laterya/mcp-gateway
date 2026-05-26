@@ -1,7 +1,7 @@
 package cn.laterya.ai.cases.mcp.streamable.message.node;
 
+import cn.laterya.ai.cases.mcp.chain.MessageChainContext;
 import cn.laterya.ai.cases.mcp.streamable.message.AbstractStreamableMessageChainNode;
-import cn.laterya.ai.cases.mcp.streamable.message.StreamableMessageChainContext;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import cn.laterya.ai.domain.session.service.ISessionManagementService;
@@ -21,7 +21,7 @@ public class StreamableMessageSessionNode extends AbstractStreamableMessageChain
     private ISessionManagementService sessionManagementService;
 
     @Override
-    protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, StreamableMessageChainContext context) {
+    protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, MessageChainContext context) {
         log.info("Streamable HTTP 消息处理 SessionNode gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId());
 
         SessionConfigVO sessionConfigVO = sessionManagementService.getSession(command.getSessionId());

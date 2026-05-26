@@ -1,7 +1,7 @@
-package cn.laterya.ai.cases.mcp.sse;
+package cn.laterya.ai.cases.mcp.sse.message;
 
-import cn.laterya.ai.cases.mcp.sse.message.AbstractMessageChainNode;
-import cn.laterya.ai.cases.mcp.sse.message.MessageChainContext;
+import cn.laterya.ai.cases.mcp.chain.AbstractChainRouter;
+import cn.laterya.ai.cases.mcp.chain.MessageChainContext;
 import cn.laterya.ai.cases.mcp.sse.message.node.MessageHandlerNode;
 import cn.laterya.ai.cases.mcp.sse.message.node.MessageRootNode;
 import cn.laterya.ai.cases.mcp.sse.message.node.MessageSessionNode;
@@ -28,7 +28,7 @@ public class McpSseMessageService implements IMcpSseMessageService {
     @Resource(name = "sseMessageHandlerNode")
     private MessageHandlerNode messageHandlerNode;
 
-    private AbstractMessageChainNode chain;
+    private AbstractChainRouter<HandleMessageCommandEntity, MessageChainContext, ResponseEntity<Void>> chain;
 
     @PostConstruct
     public void initChain() {

@@ -35,13 +35,20 @@ import java.util.stream.Collectors;
 @RequestMapping("/admin/")
 public class AdminController implements IAdminService {
 
-    @Resource private IAdminGatewayService adminGatewayService;
-    @Resource private IAdminAuthService adminAuthService;
-    @Resource private IAdminProtocolService adminProtocolService;
-    @Resource private IAdminManageService adminManageService;
-    @Resource private IAdminLLMService adminLLMService;
-    @Resource private IProtocolAnalysis protocolAnalysis;
-    @Resource private IProtocolStorage protocolStorage;
+    @Resource
+    private IAdminGatewayService adminGatewayService;
+    @Resource
+    private IAdminAuthService adminAuthService;
+    @Resource
+    private IAdminProtocolService adminProtocolService;
+    @Resource
+    private IAdminManageService adminManageService;
+    @Resource
+    private IAdminLLMService adminLLMService;
+    @Resource
+    private IProtocolAnalysis protocolAnalysis;
+    @Resource
+    private IProtocolStorage protocolStorage;
 
     // ==================== 保存 ====================
 
@@ -56,7 +63,9 @@ public class AdminController implements IAdminService {
                             .auth(GatewayEnum.GatewayAuthStatusEnum.getByCode(req.getAuth()))
                             .status(GatewayEnum.GatewayStatus.get(req.getStatus())).build()).build());
             return ok();
-        } catch (Exception e) { return fail(e, "保存网关配置"); }
+        } catch (Exception e) {
+            return fail(e, "保存网关配置");
+        }
     }
 
     @PostMapping("save_gateway_tool_config")
@@ -70,7 +79,9 @@ public class AdminController implements IAdminService {
                             .toolVersion(req.getToolVersion()).protocolId(req.getProtocolId())
                             .protocolType(req.getProtocolType()).build()).build());
             return ok();
-        } catch (Exception e) { return fail(e, "保存工具配置"); }
+        } catch (Exception e) {
+            return fail(e, "保存工具配置");
+        }
     }
 
     @PostMapping("save_gateway_protocol")
@@ -79,7 +90,9 @@ public class AdminController implements IAdminService {
             log.info("保存协议配置");
             adminProtocolService.saveGatewayProtocol(toStorageCommand(req.getHttpProtocols()));
             return ok();
-        } catch (Exception e) { return fail(e, "保存协议配置"); }
+        } catch (Exception e) {
+            return fail(e, "保存协议配置");
+        }
     }
 
     @PostMapping("save_gateway_auth")
@@ -89,7 +102,9 @@ public class AdminController implements IAdminService {
             adminAuthService.saveGatewayAuth(RegisterCommandEntity.builder()
                     .gatewayId(req.getGatewayId()).rateLimit(req.getRateLimit()).expireTime(req.getExpireTime()).build());
             return ok();
-        } catch (Exception e) { return fail(e, "保存鉴权"); }
+        } catch (Exception e) {
+            return fail(e, "保存鉴权");
+        }
     }
 
     // ==================== 导入/解析协议 ====================
@@ -102,7 +117,9 @@ public class AdminController implements IAdminService {
                     .type(AnalysisTypeEnum.swagger).openApiJson(req.getOpenApiJson()).endpoints(req.getEndpoints()).build());
             protocolStorage.doStorage(StorageCommandEntity.builder().httpProtocolVOS(vos).build());
             return ok();
-        } catch (Exception e) { return fail(e, "导入协议"); }
+        } catch (Exception e) {
+            return fail(e, "导入协议");
+        }
     }
 
     @PostMapping("analysis_protocol")
@@ -115,14 +132,17 @@ public class AdminController implements IAdminService {
                 GatewayProtocolDTO dto = GatewayProtocolDTO.builder()
                         .protocolId(v.getProtocolId()).httpUrl(v.getHttpUrl()).httpMethod(v.getHttpMethod())
                         .httpHeaders(v.getHttpHeaders()).timeout(v.getTimeout()).build();
-                if (v.getMappings() != null) dto.setMappings(v.getMappings().stream().map(m -> GatewayProtocolDTO.ProtocolMappingDTO.builder()
-                        .mappingType(m.getMappingType()).parentPath(m.getParentPath()).fieldName(m.getFieldName())
-                        .mcpPath(m.getMcpPath()).mcpType(m.getMcpType()).mcpDesc(m.getMcpDesc())
-                        .isRequired(m.getIsRequired()).sortOrder(m.getSortOrder()).build()).collect(Collectors.toList()));
+                if (v.getMappings() != null)
+                    dto.setMappings(v.getMappings().stream().map(m -> GatewayProtocolDTO.ProtocolMappingDTO.builder()
+                            .mappingType(m.getMappingType()).parentPath(m.getParentPath()).fieldName(m.getFieldName())
+                            .mcpPath(m.getMcpPath()).mcpType(m.getMcpType()).mcpDesc(m.getMcpDesc())
+                            .isRequired(m.getIsRequired()).sortOrder(m.getSortOrder()).build()).collect(Collectors.toList()));
                 return dto;
             }).collect(Collectors.toList());
             return Response.<List<GatewayProtocolDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo()).data(dtos).build();
-        } catch (Exception e) { return failResp(e, "解析协议"); }
+        } catch (Exception e) {
+            return failResp(e, "解析协议");
+        }
     }
 
     // ==================== 查询 ====================
@@ -133,9 +153,11 @@ public class AdminController implements IAdminService {
             List<GatewayConfigEntity> list = adminManageService.queryGatewayConfigList();
             return Response.<List<GatewayConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(list.stream().map(e -> GatewayConfigDTO.builder().gatewayId(e.getGatewayId()).gatewayName(e.getGatewayName())
-                            .gatewayDesc(e.getGatewayDesc()).version(e.getVersion()).auth(e.getAuth()).status(e.getStatus()).build())
+                                    .gatewayDesc(e.getGatewayDesc()).version(e.getVersion()).auth(e.getAuth()).status(e.getStatus()).build())
                             .collect(Collectors.toList())).build();
-        } catch (Exception e) { return failResp(e, "查询网关列表"); }
+        } catch (Exception e) {
+            return failResp(e, "查询网关列表");
+        }
     }
 
     @PostMapping("query_gateway_config_page")
@@ -147,7 +169,9 @@ public class AdminController implements IAdminService {
                     .gatewayId(e.getGatewayId()).gatewayName(e.getGatewayName()).gatewayDesc(e.getGatewayDesc())
                     .version(e.getVersion()).auth(e.getAuth()).status(e.getStatus()).build()).collect(Collectors.toList());
             return ResponsePage.<List<GatewayConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo()).data(dtos).total(p.getTotal()).build();
-        } catch (Exception e) { return failPage(e, "查询网关分页"); }
+        } catch (Exception e) {
+            return failPage(e, "查询网关分页");
+        }
     }
 
     @GetMapping("query_gateway_tool_list")
@@ -156,7 +180,9 @@ public class AdminController implements IAdminService {
             List<GatewayToolConfigEntity> list = adminManageService.queryGatewayToolList();
             return Response.<List<GatewayToolConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(list.stream().map(this::toToolDTO).collect(Collectors.toList())).build();
-        } catch (Exception e) { return failResp(e, "查询工具列表"); }
+        } catch (Exception e) {
+            return failResp(e, "查询工具列表");
+        }
     }
 
     @PostMapping("query_gateway_tool_page")
@@ -166,7 +192,9 @@ public class AdminController implements IAdminService {
                     .gatewayId(q.getGatewayId()).toolName(q.getToolName()).page(q.getPage()).rows(q.getRows()).build());
             return ResponsePage.<List<GatewayToolConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(p.getDataList().stream().map(this::toToolDTO).collect(Collectors.toList())).total(p.getTotal()).build();
-        } catch (Exception e) { return failPage(e, "查询工具分页"); }
+        } catch (Exception e) {
+            return failPage(e, "查询工具分页");
+        }
     }
 
     @GetMapping("query_gateway_tool_list_by_gateway_id")
@@ -175,7 +203,9 @@ public class AdminController implements IAdminService {
             List<GatewayToolConfigEntity> list = adminManageService.queryGatewayToolListByGatewayId(gatewayId);
             return Response.<List<GatewayToolConfigDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(list.stream().map(this::toToolDTO).collect(Collectors.toList())).build();
-        } catch (Exception e) { return failResp(e, "查询网关工具"); }
+        } catch (Exception e) {
+            return failResp(e, "查询网关工具");
+        }
     }
 
     @GetMapping("query_gateway_protocol_list")
@@ -183,7 +213,9 @@ public class AdminController implements IAdminService {
         try {
             return Response.<List<GatewayProtocolDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(adminManageService.queryGatewayProtocolList().stream().map(this::toProtocolDTO).collect(Collectors.toList())).build();
-        } catch (Exception e) { return failResp(e, "查询协议列表"); }
+        } catch (Exception e) {
+            return failResp(e, "查询协议列表");
+        }
     }
 
     @PostMapping("query_gateway_protocol_page")
@@ -193,7 +225,9 @@ public class AdminController implements IAdminService {
                     .protocolId(q.getProtocolId()).httpUrl(q.getHttpUrl()).page(q.getPage()).rows(q.getRows()).build());
             return ResponsePage.<List<GatewayProtocolDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(p.getDataList().stream().map(this::toProtocolDTO).collect(Collectors.toList())).total(p.getTotal()).build();
-        } catch (Exception e) { return failPage(e, "查询协议分页"); }
+        } catch (Exception e) {
+            return failPage(e, "查询协议分页");
+        }
     }
 
     @GetMapping("query_gateway_protocol_list_by_gateway_id")
@@ -201,7 +235,9 @@ public class AdminController implements IAdminService {
         try {
             return Response.<List<GatewayProtocolDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(adminManageService.queryGatewayProtocolListByGatewayId(gatewayId).stream().map(this::toProtocolDTO).collect(Collectors.toList())).build();
-        } catch (Exception e) { return failResp(e, "查询网关协议"); }
+        } catch (Exception e) {
+            return failResp(e, "查询网关协议");
+        }
     }
 
     @GetMapping("query_gateway_auth_list")
@@ -209,7 +245,9 @@ public class AdminController implements IAdminService {
         try {
             return Response.<List<GatewayAuthDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(adminManageService.queryGatewayAuthList().stream().map(this::toAuthDTO).collect(Collectors.toList())).build();
-        } catch (Exception e) { return failResp(e, "查询鉴权列表"); }
+        } catch (Exception e) {
+            return failResp(e, "查询鉴权列表");
+        }
     }
 
     @PostMapping("query_gateway_auth_page")
@@ -219,7 +257,9 @@ public class AdminController implements IAdminService {
                     .gatewayId(q.getGatewayId()).apiKey(q.getApiKey()).page(q.getPage()).rows(q.getRows()).build());
             return ResponsePage.<List<GatewayAuthDTO>>builder().code(ResponseCode.SUCCESS.getCode()).info(ResponseCode.SUCCESS.getInfo())
                     .data(p.getDataList().stream().map(this::toAuthDTO).collect(Collectors.toList())).total(p.getTotal()).build();
-        } catch (Exception e) { return failPage(e, "查询鉴权分页"); }
+        } catch (Exception e) {
+            return failPage(e, "查询鉴权分页");
+        }
     }
 
     // ==================== 删除 ====================
@@ -229,7 +269,9 @@ public class AdminController implements IAdminService {
         try {
             log.info("删除工具 gatewayId:{} toolId:{}", gatewayId, toolId);
             return ok();
-        } catch (Exception e) { return fail(e, "删除工具"); }
+        } catch (Exception e) {
+            return fail(e, "删除工具");
+        }
     }
 
     @PostMapping("delete_gateway_auth")
@@ -238,7 +280,9 @@ public class AdminController implements IAdminService {
             log.info("删除鉴权 gatewayId:{}", gatewayId);
             adminAuthService.deleteGatewayAuth(gatewayId);
             return ok();
-        } catch (Exception e) { return fail(e, "删除鉴权"); }
+        } catch (Exception e) {
+            return fail(e, "删除鉴权");
+        }
     }
 
     @PostMapping("delete_gateway_protocol")
@@ -247,7 +291,9 @@ public class AdminController implements IAdminService {
             log.info("删除协议 protocolId:{}", protocolId);
             adminProtocolService.deleteGatewayProtocol(protocolId);
             return ok();
-        } catch (Exception e) { return fail(e, "删除协议"); }
+        } catch (Exception e) {
+            return fail(e, "删除协议");
+        }
     }
 
 
@@ -257,7 +303,9 @@ public class AdminController implements IAdminService {
             log.info("更新鉴权 gatewayId:{} rateLimit:{}", gatewayId, rateLimit);
             adminAuthService.updateGatewayAuth(gatewayId, rateLimit, expireTime);
             return ok();
-        } catch (Exception e) { return fail(e, "更新鉴权"); }
+        } catch (Exception e) {
+            return fail(e, "更新鉴权");
+        }
     }
     // ==================== LLM 测试 ====================
 
@@ -291,12 +339,16 @@ public class AdminController implements IAdminService {
         StorageCommandEntity cmd = new StorageCommandEntity();
         if (list != null) cmd.setHttpProtocolVOS(list.stream().map(p -> {
             HTTPProtocolVO vo = new HTTPProtocolVO();
-            vo.setProtocolId(p.getProtocolId()); vo.setHttpUrl(p.getHttpUrl()); vo.setHttpHeaders(p.getHttpHeaders());
-            vo.setHttpMethod(p.getHttpMethod()); vo.setTimeout(p.getTimeout());
-            if (p.getMappings() != null) vo.setMappings(p.getMappings().stream().map(m -> HTTPProtocolVO.ProtocolMapping.builder()
-                    .mappingType(m.getMappingType()).parentPath(m.getParentPath()).fieldName(m.getFieldName())
-                    .mcpPath(m.getMcpPath()).mcpType(m.getMcpType()).mcpDesc(m.getMcpDesc())
-                    .isRequired(m.getIsRequired()).sortOrder(m.getSortOrder()).build()).collect(Collectors.toList()));
+            vo.setProtocolId(p.getProtocolId());
+            vo.setHttpUrl(p.getHttpUrl());
+            vo.setHttpHeaders(p.getHttpHeaders());
+            vo.setHttpMethod(p.getHttpMethod());
+            vo.setTimeout(p.getTimeout());
+            if (p.getMappings() != null)
+                vo.setMappings(p.getMappings().stream().map(m -> HTTPProtocolVO.ProtocolMapping.builder()
+                        .mappingType(m.getMappingType()).parentPath(m.getParentPath()).fieldName(m.getFieldName())
+                        .mcpPath(m.getMcpPath()).mcpType(m.getMcpType()).mcpDesc(m.getMcpDesc())
+                        .isRequired(m.getIsRequired()).sortOrder(m.getSortOrder()).build()).collect(Collectors.toList()));
             return vo;
         }).collect(Collectors.toList()));
         return cmd;
@@ -311,10 +363,11 @@ public class AdminController implements IAdminService {
     private GatewayProtocolDTO toProtocolDTO(GatewayProtocolConfigEntity e) {
         GatewayProtocolDTO dto = GatewayProtocolDTO.builder().protocolId(e.getProtocolId()).httpUrl(e.getHttpUrl())
                 .httpMethod(e.getHttpMethod()).httpHeaders(e.getHttpHeaders()).timeout(e.getTimeout()).build();
-        if (e.getMappings() != null) dto.setMappings(e.getMappings().stream().map(m -> GatewayProtocolDTO.ProtocolMappingDTO.builder()
-                .mappingType(m.getMappingType()).parentPath(m.getParentPath()).fieldName(m.getFieldName())
-                .mcpPath(m.getMcpPath()).mcpType(m.getMcpType()).mcpDesc(m.getMcpDesc())
-                .isRequired(m.getIsRequired()).sortOrder(m.getSortOrder()).build()).collect(Collectors.toList()));
+        if (e.getMappings() != null)
+            dto.setMappings(e.getMappings().stream().map(m -> GatewayProtocolDTO.ProtocolMappingDTO.builder()
+                    .mappingType(m.getMappingType()).parentPath(m.getParentPath()).fieldName(m.getFieldName())
+                    .mcpPath(m.getMcpPath()).mcpType(m.getMcpType()).mcpDesc(m.getMcpDesc())
+                    .isRequired(m.getIsRequired()).sortOrder(m.getSortOrder()).build()).collect(Collectors.toList()));
         return dto;
     }
 

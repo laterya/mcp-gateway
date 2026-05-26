@@ -1,7 +1,7 @@
 package cn.laterya.ai.cases.mcp.sse.message.node;
 
+import cn.laterya.ai.cases.mcp.chain.MessageChainContext;
 import cn.laterya.ai.cases.mcp.sse.message.AbstractMessageChainNode;
-import cn.laterya.ai.cases.mcp.sse.message.MessageChainContext;
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;

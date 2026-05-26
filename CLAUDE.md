@@ -53,7 +53,7 @@ app       (Spring Boot 启动模块，装配层)
 |--------|-------|---------------|
 | `types` | 基础类型 | 通用响应、常量、异常、工具类 |
 | `domain` | 领域层 | 实体、值对象、领域服务、Port 接口。含 6 个限界上下文：`session` / `auth` / `protocol` / `gateway` / `admin` / `llm` |
-| `case` | 用例层 | 编排领域服务，事务边界（依赖 spring-tx、spring-web）。含 mcp 编排（session/message 两条责任链）和 admin 编排（CRUD 转发） |
+| `case` | 用例层 | 编排领域服务，事务边界（依赖 spring-tx、spring-web）。含 mcp 编排（泛型责任链框架 `AbstractChainRouter<T,D,R>` + session/message 两条链）和 admin 编排（CRUD 转发） |
 | `infrastructure` | 基础设施层 | 实现 domain 的 Port，对接外部系统 |
 | `api` | 接口定义 | 对外 Facade 接口 + DTO |
 | `trigger` | 触发器层 | HTTP Controller，调用 case/api |
@@ -125,6 +125,7 @@ Client POST /{gatewayId}/mcp/sse?sessionId=xxx
 - **数据库初始化**：SQL 文件名为 `ai_mcp_gateway.sql` 但实际建库名为 `mcp_gateway`，Docker 自动加载 `docker-entrypoint-initdb.d`
 - **会话编排责任链**：`RootNode → VerifyNode(AuthLicenseService鉴权) → CreateSessionNode → SseResponseNode`，在 case 层组装
 - **消息编排责任链**：`MessageRootNode(AuthRateLimitService限流) → MessageSessionNode → MessageHandlerNode`，在 case 层组装
+- **泛型责任链框架**：`AbstractChainRouter<T, D, R>`（三泛型：请求类型、上下文、返回类型），位于 `cases/mcp/chain/`。SSE 和 Streamable 共享统一上下文 `SessionChainContext`/`MessageChainContext`，各传输的抽象基类（如 `AbstractSessionChainNode`）继承泛型框架并指定具体类型参数
 - **HTTP 客户端配置位置**：`GenericHttpGateway`（Retrofit2 接口）和 `HTTPClientConfig`（OkHttp 连接池）都在 infrastructure 模块
 - **消息路由使用策略模式**：`SessionMessageService` 通过 `Map<String, IRequestHandler>` 自动注入，按 method 字段分发
 - **JSON-RPC 消息类型**：`McpSchemaVO` 使用 sealed interface + record（JDK 21 特性）

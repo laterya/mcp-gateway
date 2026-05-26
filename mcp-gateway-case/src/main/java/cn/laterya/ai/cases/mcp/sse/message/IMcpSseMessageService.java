@@ -1,4 +1,4 @@
-package cn.laterya.ai.cases.mcp.sse;
+package cn.laterya.ai.cases.mcp.sse.message;
 
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import org.springframework.http.ResponseEntity;

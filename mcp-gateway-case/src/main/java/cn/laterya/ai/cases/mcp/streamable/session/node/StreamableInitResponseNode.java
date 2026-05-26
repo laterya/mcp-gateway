@@ -1,7 +1,7 @@
 package cn.laterya.ai.cases.mcp.streamable.session.node;
 
+import cn.laterya.ai.cases.mcp.chain.SessionChainContext;
 import cn.laterya.ai.cases.mcp.streamable.session.AbstractStreamableSessionChainNode;
-import cn.laterya.ai.cases.mcp.streamable.session.StreamableSessionChainContext;
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
 import cn.laterya.ai.domain.session.service.ISessionMessageService;
 import jakarta.annotation.Resource;
@@ -23,7 +23,7 @@ public class StreamableInitResponseNode extends AbstractStreamableSessionChainNo
     private ISessionMessageService sessionMessageService;
 
     @Override
-    protected void doHandle(String gatewayId, StreamableSessionChainContext context) {
+    protected Void doHandle(String gatewayId, SessionChainContext context) {
         log.info("Streamable HTTP 处理 initialize 请求 gatewayId:{}", gatewayId);
 
         // 解析消息并路由到 InitializeHandler
@@ -32,6 +32,7 @@ public class StreamableInitResponseNode extends AbstractStreamableSessionChainNo
 
         context.setInitializeResponse(response);
         // 终端节点，不调用 fireNext
+        return null;
     }
 
 }

@@ -1,4 +1,4 @@
-package cn.laterya.ai.cases.mcp.sse;
+package cn.laterya.ai.cases.mcp.sse.session;
 
 import org.springframework.http.codec.ServerSentEvent;
 import reactor.core.publisher.Flux;

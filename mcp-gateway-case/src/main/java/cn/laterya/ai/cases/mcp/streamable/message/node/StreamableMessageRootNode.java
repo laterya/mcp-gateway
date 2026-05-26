@@ -1,7 +1,7 @@
 package cn.laterya.ai.cases.mcp.streamable.message.node;
 
+import cn.laterya.ai.cases.mcp.chain.MessageChainContext;
 import cn.laterya.ai.cases.mcp.streamable.message.AbstractStreamableMessageChainNode;
-import cn.laterya.ai.cases.mcp.streamable.message.StreamableMessageChainContext;
 import cn.laterya.ai.domain.auth.model.entity.RateLimitCommandEntity;
 import cn.laterya.ai.domain.auth.service.IAuthRateLimitService;
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
@@ -25,7 +25,7 @@ public class StreamableMessageRootNode extends AbstractStreamableMessageChainNod
     private IAuthRateLimitService authRateLimitService;
 
     @Override
-    protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, StreamableMessageChainContext context) {
+    protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, MessageChainContext context) {
         try {
             log.info("Streamable HTTP 消息处理 RootNode gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId());
 

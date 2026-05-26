@@ -1,7 +1,7 @@
 package cn.laterya.ai.cases.mcp.streamable.message.node;
 
+import cn.laterya.ai.cases.mcp.chain.MessageChainContext;
 import cn.laterya.ai.cases.mcp.streamable.message.AbstractStreamableMessageChainNode;
-import cn.laterya.ai.cases.mcp.streamable.message.StreamableMessageChainContext;
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
@@ -26,7 +26,7 @@ public class StreamableMessageHandlerNode extends AbstractStreamableMessageChain
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, StreamableMessageChainContext context) {
+    protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, MessageChainContext context) {
         try {
             log.info("Streamable HTTP 消息处理 MessageHandlerNode gatewayId:{}", command.getGatewayId());
 

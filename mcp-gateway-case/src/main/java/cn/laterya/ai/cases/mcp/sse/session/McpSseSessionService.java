@@ -1,11 +1,11 @@
-package cn.laterya.ai.cases.mcp.sse;
+package cn.laterya.ai.cases.mcp.sse.session;
 
-import cn.laterya.ai.cases.mcp.sse.chain.AbstractSessionChainNode;
-import cn.laterya.ai.cases.mcp.sse.chain.SessionChainContext;
-import cn.laterya.ai.cases.mcp.sse.chain.node.CreateSessionNode;
-import cn.laterya.ai.cases.mcp.sse.chain.node.RootNode;
-import cn.laterya.ai.cases.mcp.sse.chain.node.SseResponseNode;
-import cn.laterya.ai.cases.mcp.sse.chain.node.VerifyNode;
+import cn.laterya.ai.cases.mcp.chain.AbstractChainRouter;
+import cn.laterya.ai.cases.mcp.chain.SessionChainContext;
+import cn.laterya.ai.cases.mcp.sse.session.node.CreateSessionNode;
+import cn.laterya.ai.cases.mcp.sse.session.node.RootNode;
+import cn.laterya.ai.cases.mcp.sse.session.node.SseResponseNode;
+import cn.laterya.ai.cases.mcp.sse.session.node.VerifyNode;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ public class McpSseSessionService implements IMcpSseSessionService {
     @Resource(name = "sseSseResponseNode")
     private SseResponseNode sseResponseNode;
 
-    private AbstractSessionChainNode chain;
+    private AbstractChainRouter<String, SessionChainContext, Flux<ServerSentEvent<String>>> chain;
 
     @PostConstruct
     public void initChain() {

@@ -2,7 +2,7 @@ package cn.laterya.ai.trigger.http;
 
 import cn.laterya.ai.cases.mcp.streamable.message.IMcpStreamableMessageService;
 import cn.laterya.ai.cases.mcp.streamable.session.IMcpStreamableSessionService;
-import cn.laterya.ai.cases.mcp.streamable.session.StreamableSessionChainContext;
+import cn.laterya.ai.cases.mcp.chain.SessionChainContext;
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
@@ -144,7 +144,7 @@ public class McpStreamableController {
 
     private ResponseEntity<String> handleInitialize(String gatewayId, String apiKey, String messageBody) throws Exception {
         log.info("Streamable HTTP 处理 initialize gatewayId:{}", gatewayId);
-        StreamableSessionChainContext context = sessionService.handleInitialize(gatewayId, apiKey, messageBody);
+        SessionChainContext context = sessionService.handleInitialize(gatewayId, apiKey, messageBody);
 
         String responseBody = objectMapper.writeValueAsString(context.getInitializeResponse());
         return ResponseEntity.ok()

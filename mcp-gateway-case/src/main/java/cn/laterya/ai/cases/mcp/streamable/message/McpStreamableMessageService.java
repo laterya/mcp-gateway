@@ -1,5 +1,7 @@
 package cn.laterya.ai.cases.mcp.streamable.message;
 
+import cn.laterya.ai.cases.mcp.chain.AbstractChainRouter;
+import cn.laterya.ai.cases.mcp.chain.MessageChainContext;
 import cn.laterya.ai.cases.mcp.streamable.message.node.StreamableMessageHandlerNode;
 import cn.laterya.ai.cases.mcp.streamable.message.node.StreamableMessageRootNode;
 import cn.laterya.ai.cases.mcp.streamable.message.node.StreamableMessageSessionNode;
@@ -26,7 +28,7 @@ public class McpStreamableMessageService implements IMcpStreamableMessageService
     @Resource(name = "streamableMessageHandlerNode")
     private StreamableMessageHandlerNode messageHandlerNode;
 
-    private AbstractStreamableMessageChainNode chain;
+    private AbstractChainRouter<HandleMessageCommandEntity, MessageChainContext, ResponseEntity<Void>> chain;
 
     @PostConstruct
     public void initChain() {
@@ -39,7 +41,7 @@ public class McpStreamableMessageService implements IMcpStreamableMessageService
 
     @Override
     public ResponseEntity<Void> handleMessage(HandleMessageCommandEntity commandEntity) throws Exception {
-        return chain.handle(commandEntity, new StreamableMessageChainContext());
+        return chain.handle(commandEntity, new MessageChainContext());
     }
 
 }
