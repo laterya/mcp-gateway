@@ -1,10 +1,8 @@
-package cn.laterya.ai.cases.mcp.streamable.message.node;
+package cn.laterya.ai.cases.mcp.chain.message;
 
-import cn.laterya.ai.cases.mcp.streamable.message.AbstractStreamableMessageChainNode;
-import cn.laterya.ai.cases.mcp.streamable.message.StreamableMessageChainContext;
+import cn.laterya.ai.cases.mcp.chain.AbstractChainNode;
+import cn.laterya.ai.cases.mcp.chain.MessageChainContext;
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
-import cn.laterya.ai.domain.session.model.SessionConfigVO;
-import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import cn.laterya.ai.domain.session.service.ISessionMessageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
@@ -14,11 +12,11 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Component;
 
 /**
- * Streamable HTTP — 消息处理终端节点（处理消息 + Sink 推送）
+ * 共享消息链终端节点 — 处理消息 + Sink 推送
  */
 @Slf4j
-@Component("streamableMessageHandlerNode")
-public class StreamableMessageHandlerNode extends AbstractStreamableMessageChainNode {
+@Component("mcpMessageHandlerNode")
+public class MessageHandlerNode extends AbstractChainNode<MessageChainContext, ResponseEntity<Void>> {
 
     @Resource
     private ISessionMessageService sessionMessageService;
@@ -26,16 +24,17 @@ public class StreamableMessageHandlerNode extends AbstractStreamableMessageChain
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, StreamableMessageChainContext context) {
+    protected ResponseEntity<Void> doHandle(MessageChainContext context) {
+        var command = context.getCommand();
         try {
-            log.info("Streamable HTTP 消息处理 MessageHandlerNode gatewayId:{}", command.getGatewayId());
+            log.info("消息处理 MessageHandlerNode gatewayId:{}", command.getGatewayId());
 
             McpSchemaVO.JSONRPCResponse jsonrpcResponse =
                     sessionMessageService.processHandlerMessage(command.getGatewayId(), command.getJsonrpcMessage());
 
             if (null != jsonrpcResponse) {
                 String responseJson = objectMapper.writeValueAsString(jsonrpcResponse);
-                SessionConfigVO sessionConfigVO = context.getSessionConfigVO();
+                var sessionConfigVO = context.getSessionConfigVO();
                 sessionConfigVO.getSink().tryEmitNext(ServerSentEvent.<String>builder()
                         .event("message")
                         .data(responseJson)
@@ -44,7 +43,7 @@ public class StreamableMessageHandlerNode extends AbstractStreamableMessageChain
 
             return ResponseEntity.accepted().build();
         } catch (Exception e) {
-            log.error("Streamable HTTP 消息处理失败 gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId(), e);
+            log.error("消息处理失败 gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId(), e);
             return ResponseEntity.internalServerError().build();
         }
     }

@@ -1,5 +1,7 @@
 package cn.laterya.ai.cases.mcp.streamable.session;
 
+import cn.laterya.ai.cases.mcp.chain.SessionChainContext;
+
 /**
  * Streamable HTTP — 会话服务接口
  *
@@ -16,6 +18,6 @@ public interface IMcpStreamableSessionService {
      * @param messageBody JSON-RPC 请求体（initialize）
      * @return 包含 sessionConfigVO 和 initializeResponse 的上下文
      */
-    StreamableSessionChainContext handleInitialize(String gatewayId, String apiKey, String messageBody);
+    SessionChainContext handleInitialize(String gatewayId, String apiKey, String messageBody);
 
 }

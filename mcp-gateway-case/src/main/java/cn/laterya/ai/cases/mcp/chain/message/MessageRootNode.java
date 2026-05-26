@@ -1,11 +1,10 @@
-package cn.laterya.ai.cases.mcp.sse.message.node;
+package cn.laterya.ai.cases.mcp.chain.message;
 
-import cn.laterya.ai.cases.mcp.sse.message.AbstractMessageChainNode;
-import cn.laterya.ai.cases.mcp.sse.message.MessageChainContext;
+import cn.laterya.ai.cases.mcp.chain.AbstractChainNode;
+import cn.laterya.ai.cases.mcp.chain.MessageChainContext;
 import cn.laterya.ai.domain.auth.model.entity.RateLimitCommandEntity;
 import cn.laterya.ai.domain.auth.service.IAuthRateLimitService;
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
-import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import cn.laterya.ai.domain.session.model.enums.SessionMessageHandlerMethodEnum;
 import cn.laterya.ai.types.enums.McpErrorCodes;
 import cn.laterya.ai.types.exception.AppException;
@@ -15,19 +14,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 /**
- * SSE 传输 — 消息处理根节点（限流 + 异常兜底）
+ * 共享消息链根节点 — 限流 + 异常兜底
  */
 @Slf4j
-@Component("sseMessageRootNode")
-public class MessageRootNode extends AbstractMessageChainNode {
+@Component("mcpMessageRootNode")
+public class MessageRootNode extends AbstractChainNode<MessageChainContext, ResponseEntity<Void>> {
 
     @Resource
     private IAuthRateLimitService authRateLimitService;
 
     @Override
-    protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, MessageChainContext context) {
+    protected ResponseEntity<Void> doHandle(MessageChainContext context) {
+        var command = context.getCommand();
         try {
-            log.info("消息处理 mcp message RootNode gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId());
+            log.info("消息处理 RootNode gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId());
 
             if (command.getJsonrpcMessage() instanceof McpSchemaVO.JSONRPCRequest request) {
                 SessionMessageHandlerMethodEnum methodEnum = SessionMessageHandlerMethodEnum.getByMethod(request.method());
@@ -40,7 +40,7 @@ public class MessageRootNode extends AbstractMessageChainNode {
                 }
             }
 
-            return fireNext(command, context);
+            return fireNext(context);
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
