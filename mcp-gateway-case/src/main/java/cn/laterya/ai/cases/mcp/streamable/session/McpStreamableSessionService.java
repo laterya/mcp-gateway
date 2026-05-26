@@ -1,5 +1,6 @@
 package cn.laterya.ai.cases.mcp.streamable.session;
 
+import cn.laterya.ai.cases.mcp.shared.session.SessionChainContext;
 import cn.laterya.ai.cases.mcp.streamable.session.node.StreamableCreateSessionNode;
 import cn.laterya.ai.cases.mcp.streamable.session.node.StreamableInitResponseNode;
 import cn.laterya.ai.cases.mcp.streamable.session.node.StreamableRootNode;
@@ -40,8 +41,8 @@ public class McpStreamableSessionService implements IMcpStreamableSessionService
     }
 
     @Override
-    public StreamableSessionChainContext handleInitialize(String gatewayId, String apiKey, String messageBody) {
-        StreamableSessionChainContext context = new StreamableSessionChainContext();
+    public SessionChainContext handleInitialize(String gatewayId, String apiKey, String messageBody) {
+        SessionChainContext context = new SessionChainContext();
         context.setApiKey(apiKey);
         context.setMessageBody(messageBody);
         chain.handle(gatewayId, context);

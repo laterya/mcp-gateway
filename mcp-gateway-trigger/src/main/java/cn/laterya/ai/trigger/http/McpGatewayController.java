@@ -1,7 +1,7 @@
 package cn.laterya.ai.trigger.http;
 
 import cn.laterya.ai.api.IMcpGatewayService;
-import cn.laterya.ai.cases.mcp.sse.IMcpSseMessageService;
+import cn.laterya.ai.cases.mcp.shared.message.IMcpMessageService;
 import cn.laterya.ai.cases.mcp.sse.IMcpSseSessionService;
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import cn.laterya.ai.types.enums.ResponseCode;
@@ -35,8 +35,8 @@ public class McpGatewayController implements IMcpGatewayService {
     @Resource(name = "sseMcpSessionService")
     private IMcpSseSessionService mcpSessionService;
 
-    @Resource(name = "sseMcpMessageService")
-    private IMcpSseMessageService mcpMessageService;
+    @Resource(name = "mcpMessageService")
+    private IMcpMessageService mcpMessageService;
 
     @Override
     @GetMapping(value = "{gatewayId}/mcp/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

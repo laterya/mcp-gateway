@@ -1,7 +1,7 @@
 package cn.laterya.ai.cases.mcp.sse.chain.node;
 
 import cn.laterya.ai.cases.mcp.sse.chain.AbstractSessionChainNode;
-import cn.laterya.ai.cases.mcp.sse.chain.SessionChainContext;
+import cn.laterya.ai.cases.mcp.shared.session.SessionChainContext;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 import cn.laterya.ai.domain.session.service.ISessionManagementService;
 import jakarta.annotation.Resource;

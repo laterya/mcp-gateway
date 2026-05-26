@@ -1,7 +1,7 @@
 package cn.laterya.ai.cases.mcp.streamable.session.node;
 
+import cn.laterya.ai.cases.mcp.shared.session.SessionChainContext;
 import cn.laterya.ai.cases.mcp.streamable.session.AbstractStreamableSessionChainNode;
-import cn.laterya.ai.cases.mcp.streamable.session.StreamableSessionChainContext;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 import cn.laterya.ai.domain.session.service.ISessionManagementService;
 import jakarta.annotation.Resource;
@@ -22,7 +22,7 @@ public class StreamableCreateSessionNode extends AbstractStreamableSessionChainN
     private ISessionManagementService sessionManagementService;
 
     @Override
-    protected void doHandle(String gatewayId, StreamableSessionChainContext context) {
+    protected void doHandle(String gatewayId, SessionChainContext context) {
         log.info("Streamable HTTP 创建会话 gatewayId:{}", gatewayId);
 
         // 不带 apiKey 的重载 — 不推送 endpoint 事件

@@ -1,7 +1,7 @@
-package cn.laterya.ai.cases.mcp.streamable.message.node;
+package cn.laterya.ai.cases.mcp.shared.message.node;
 
-import cn.laterya.ai.cases.mcp.streamable.message.AbstractStreamableMessageChainNode;
-import cn.laterya.ai.cases.mcp.streamable.message.StreamableMessageChainContext;
+import cn.laterya.ai.cases.mcp.shared.message.AbstractMessageChainNode;
+import cn.laterya.ai.cases.mcp.shared.message.MessageChainContext;
 import cn.laterya.ai.domain.session.model.McpSchemaVO;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
@@ -14,11 +14,11 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Component;
 
 /**
- * Streamable HTTP — 消息处理终端节点（处理消息 + Sink 推送）
+ * 消息处理终端节点（处理消息 + Sink 推送）
  */
 @Slf4j
-@Component("streamableMessageHandlerNode")
-public class StreamableMessageHandlerNode extends AbstractStreamableMessageChainNode {
+@Component("messageHandlerNode")
+public class MessageHandlerNode extends AbstractMessageChainNode {
 
     @Resource
     private ISessionMessageService sessionMessageService;
@@ -26,9 +26,9 @@ public class StreamableMessageHandlerNode extends AbstractStreamableMessageChain
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, StreamableMessageChainContext context) {
+    protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, MessageChainContext context) {
         try {
-            log.info("Streamable HTTP 消息处理 MessageHandlerNode gatewayId:{}", command.getGatewayId());
+            log.info("消息处理 HandlerNode gatewayId:{}", command.getGatewayId());
 
             McpSchemaVO.JSONRPCResponse jsonrpcResponse =
                     sessionMessageService.processHandlerMessage(command.getGatewayId(), command.getJsonrpcMessage());
@@ -44,7 +44,7 @@ public class StreamableMessageHandlerNode extends AbstractStreamableMessageChain
 
             return ResponseEntity.accepted().build();
         } catch (Exception e) {
-            log.error("Streamable HTTP 消息处理失败 gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId(), e);
+            log.error("消息处理失败 gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId(), e);
             return ResponseEntity.internalServerError().build();
         }
     }

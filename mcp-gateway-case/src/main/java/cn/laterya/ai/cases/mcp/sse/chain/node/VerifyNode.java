@@ -1,7 +1,7 @@
 package cn.laterya.ai.cases.mcp.sse.chain.node;
 
 import cn.laterya.ai.cases.mcp.sse.chain.AbstractSessionChainNode;
-import cn.laterya.ai.cases.mcp.sse.chain.SessionChainContext;
+import cn.laterya.ai.cases.mcp.shared.session.SessionChainContext;
 import cn.laterya.ai.domain.auth.model.entity.LicenseCommandEntity;
 import cn.laterya.ai.domain.auth.service.IAuthLicenseService;
 import cn.laterya.ai.types.enums.McpErrorCodes;

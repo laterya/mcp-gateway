@@ -1,7 +1,7 @@
 package cn.laterya.ai.cases.mcp.streamable.session.node;
 
+import cn.laterya.ai.cases.mcp.shared.session.SessionChainContext;
 import cn.laterya.ai.cases.mcp.streamable.session.AbstractStreamableSessionChainNode;
-import cn.laterya.ai.cases.mcp.streamable.session.StreamableSessionChainContext;
 import cn.laterya.ai.domain.auth.model.entity.LicenseCommandEntity;
 import cn.laterya.ai.domain.auth.service.IAuthLicenseService;
 import cn.laterya.ai.types.enums.McpErrorCodes;
@@ -21,7 +21,7 @@ public class StreamableVerifyNode extends AbstractStreamableSessionChainNode {
     private IAuthLicenseService authLicenseService;
 
     @Override
-    protected void doHandle(String gatewayId, StreamableSessionChainContext context) {
+    protected void doHandle(String gatewayId, SessionChainContext context) {
         log.info("Streamable HTTP 鉴权校验 gatewayId:{}", gatewayId);
 
         boolean isValid = authLicenseService.checkLicense(new LicenseCommandEntity(gatewayId, context.getApiKey()));

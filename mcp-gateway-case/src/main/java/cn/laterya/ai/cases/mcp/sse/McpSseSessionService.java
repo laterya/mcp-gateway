@@ -1,11 +1,11 @@
 package cn.laterya.ai.cases.mcp.sse;
 
 import cn.laterya.ai.cases.mcp.sse.chain.AbstractSessionChainNode;
-import cn.laterya.ai.cases.mcp.sse.chain.SessionChainContext;
 import cn.laterya.ai.cases.mcp.sse.chain.node.CreateSessionNode;
 import cn.laterya.ai.cases.mcp.sse.chain.node.RootNode;
 import cn.laterya.ai.cases.mcp.sse.chain.node.SseResponseNode;
 import cn.laterya.ai.cases.mcp.sse.chain.node.VerifyNode;
+import cn.laterya.ai.cases.mcp.shared.session.SessionChainContext;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;

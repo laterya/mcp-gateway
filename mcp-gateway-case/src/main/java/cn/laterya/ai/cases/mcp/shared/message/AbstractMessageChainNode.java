@@ -1,10 +1,10 @@
-package cn.laterya.ai.cases.mcp.sse.message;
+package cn.laterya.ai.cases.mcp.shared.message;
 
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import org.springframework.http.ResponseEntity;
 
 /**
- * SSE 传输 — 消息编排链抽象节点
+ * 消息编排链抽象节点（SSE / Streamable 共用）
  */
 public abstract class AbstractMessageChainNode {
 

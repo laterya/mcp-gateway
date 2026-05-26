@@ -1,7 +1,7 @@
-package cn.laterya.ai.cases.mcp.sse.message.node;
+package cn.laterya.ai.cases.mcp.shared.message.node;
 
-import cn.laterya.ai.cases.mcp.sse.message.AbstractMessageChainNode;
-import cn.laterya.ai.cases.mcp.sse.message.MessageChainContext;
+import cn.laterya.ai.cases.mcp.shared.message.AbstractMessageChainNode;
+import cn.laterya.ai.cases.mcp.shared.message.MessageChainContext;
 import cn.laterya.ai.domain.session.model.SessionConfigVO;
 import cn.laterya.ai.domain.session.model.entity.HandleMessageCommandEntity;
 import cn.laterya.ai.domain.session.service.ISessionManagementService;
@@ -11,10 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 /**
- * SSE 传输 — 消息处理会话节点
+ * 消息处理会话节点
  */
 @Slf4j
-@Component("sseMessageSessionNode")
+@Component("messageSessionNode")
 public class MessageSessionNode extends AbstractMessageChainNode {
 
     @Resource
@@ -22,7 +22,7 @@ public class MessageSessionNode extends AbstractMessageChainNode {
 
     @Override
     protected ResponseEntity<Void> doHandle(HandleMessageCommandEntity command, MessageChainContext context) {
-        log.info("消息处理 mcp message SessionNode gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId());
+        log.info("消息处理 SessionNode gatewayId:{} sessionId:{}", command.getGatewayId(), command.getSessionId());
 
         SessionConfigVO sessionConfigVO = sessionManagementService.getSession(command.getSessionId());
         if (null == sessionConfigVO) {
