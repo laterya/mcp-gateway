@@ -45,4 +45,22 @@
         UPDATE mcp_gateway SET auth = #{auth} WHERE gateway_id = #{gatewayId}
     </update>
 
+    <select id="queryPage" resultMap="mcpGatewayMap">
+        SELECT * FROM mcp_gateway
+        <where>
+            <if test="gatewayId != null and gatewayId != ''">AND gateway_id = #{gatewayId}</if>
+            <if test="gatewayName != null and gatewayName != ''">AND gateway_name LIKE CONCAT('%', #{gatewayName}, '%')</if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="queryCount" resultType="long">
+        SELECT COUNT(*) FROM mcp_gateway
+        <where>
+            <if test="gatewayId != null and gatewayId != ''">AND gateway_id = #{gatewayId}</if>
+            <if test="gatewayName != null and gatewayName != ''">AND gateway_name LIKE CONCAT('%', #{gatewayName}, '%')</if>
+        </where>
+    </select>
+
 </mapper>
